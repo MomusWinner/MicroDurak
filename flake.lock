@@ -1,6 +1,40 @@
 {
   "nodes": {
+    "defold": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1744403630,
+        "narHash": "sha256-nzS1A/bTnBbua4aNroQAQmEQeQa0wNX9T3SK4a+jqHc=",
+        "owner": "spl3g",
+        "repo": "defold-flake",
+        "rev": "09ed4630fe78728be6567f3553010c6fc32fd29e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "spl3g",
+        "repo": "defold-flake",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
+      "locked": {
+        "lastModified": 1744232761,
+        "narHash": "sha256-gbl9hE39nQRpZaLjhWKmEu5ejtQsgI5TWYrIVVJn30U=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "f675531bc7e6657c10a18b565cfebd8aa9e24c14",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
       "locked": {
         "lastModified": 1744232761,
         "narHash": "sha256-gbl9hE39nQRpZaLjhWKmEu5ejtQsgI5TWYrIVVJn30U=",
@@ -16,7 +50,8 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "defold": "defold",
+        "nixpkgs": "nixpkgs_2"
       }
     }
   },

@@ -2,10 +2,13 @@
   description = "A Nix-flake-based Go 1.24 development environment";
 
   inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
+  inputs.defold.url = "github:spl3g/defold-flake";
 
   outputs = {
     self,
+    defold,
     nixpkgs,
+    ...
   }: let
     goVersion = 24; # Change this to update the whole stack
 
@@ -31,6 +34,7 @@
           # goimports, godoc, etc.
           gotools
           gopls
+          defold.packages."x86_64-linux".default
 
           sqlc
         ];
