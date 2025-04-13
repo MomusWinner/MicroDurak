@@ -1,20 +1,24 @@
 # Project structure
-.
-├── backend
-│   ├── cmd
-│   │   ├── authorization
-│   │   ├── db-service
-│   │   ├── game-manager
-│   │   ├── game-server
-│   │   ├── matchmaker
-│   │   └── users
-│   ├── lib
-│   └── services
-│       ├── authorization
-│       ├── db-service
-│       ├── game-manager
-│       ├── game-server
-│       ├── matchmaker
-│       └── users
-└── game-client
-    └── ...
+.  
+├── backend  
+│   ├── cmd  
+│   │   ├── auth  
+│   │   ├── db-service  
+│   │   ├── game-manager  
+│   │   ├── game-server  
+│   │   ├── matchmaker  
+│   │   └── users  
+│   ├── contracts  
+│   ├── database  
+│   ├── lib  
+│   ├── migrations  
+│   ├── queries  
+│   └── services  
+│       ├── auth  
+│       ├── game-manager  
+│       ├── game-server  
+│       ├── matchmaker  
+│       └── users  
+├── docs  
+└── game-client  
+    └── MicroDurak
