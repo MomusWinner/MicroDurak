@@ -11,10 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// /login
-// /register
-
-// CheckTocken
 func main() {
 	e := echo.New()
 	ctx := context.Background()
