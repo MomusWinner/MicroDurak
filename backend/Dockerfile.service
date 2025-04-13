@@ -4,14 +4,17 @@ ARG SERVICE_NAME
 
 WORKDIR /micro-durak/$SERVICE_NAME
 
-ADD ./cmd ./
-ADD ./services ./
-ADD ./lib ./
+COPY ./cmd ./cmd
+COPY ./services ./services
+COPY ./lib ./lib
+COPY ./database ./database
+COPY ./go.mod ./go.sum ./
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o app cmd/$SERVICE_NAME/main.go
+RUN go build -o app ./cmd/$SERVICE_NAME/main.go
 
 #final stage
 FROM alpine:3.21
+ARG SERVICE_NAME
 
 WORKDIR /root/
 

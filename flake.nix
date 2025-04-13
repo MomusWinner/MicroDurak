@@ -36,7 +36,9 @@
           gopls
           defold.packages."x86_64-linux".default
 
+          # db stuff
           sqlc
+          goose
         ];
       };
     });
