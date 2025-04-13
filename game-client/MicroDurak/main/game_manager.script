@@ -1,0 +1,50 @@
+local Card = require("main.card.card")
+local test_json = [[
+{
+  "attacking_id : "user1",
+  "defending_id" : "user2",
+  "me" : {
+    "user_id" : ""
+  }
+}
+]]
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.cards = {}
+	self.deck = {}
+	-- create_card(self, Card.Suit.DIAMONDS, 6, "test")
+end
+
+function final(self) end
+
+function update(self, dt) end
+
+function on_message(self, message_id, message, sender) end
+
+function on_input(self, action_id, action) end
+
+function generate_deck(self)
+	local deck = {}
+	for rank = 1, 15, 1 do
+		for key, value in pairs(Card.Suit) do
+			table.insert(deck, { suit = value, rank = rank })
+		end
+	end
+
+	for _, value in ipairs(t) do
+		print("Rank: " .. value.rank .. " Suit: " .. value.suit)
+	end
+end
+
+function create_card(self, suit, rank, front_anim)
+	local p = vmath.vector3()
+	local url = factory.create("#card_factory", p, nil, 1)
+	local card = Card:new({
+		suit = suit,
+		rank = rank,
+		url = url,
+		front_anim = front_anim,
+	})
+	table.insert(self.cards, card)
+end

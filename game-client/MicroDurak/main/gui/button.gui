@@ -1,0 +1,33 @@
+fonts {
+  name: "RubickBold"
+  font: "/assets/fonts/RubickBold.font"
+}
+nodes {
+  size {
+    x: 200.0
+    y: 70.0
+  }
+  color {
+    x: 0.125
+    y: 0.224
+    z: 0.31
+  }
+  type: TYPE_BOX
+  id: "box"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 70.0
+  }
+  type: TYPE_TEXT
+  text: "Button"
+  font: "RubickBold"
+  id: "text"
+  parent: "box"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

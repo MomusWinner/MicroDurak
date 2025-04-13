@@ -1,6 +1,12 @@
 local druid = require("druid.druid")
+local p = require("main.param")
 
 local name_button_start = "button_start"
+
+function on_click_start_button()
+	print("Click")
+	msg.post(p.loader, "load_game", {})
+end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
@@ -26,8 +32,4 @@ end
 
 function on_reload(self)
 	self.druid:on_reload()
-end
-
-function on_click_start_button()
-	print("Click")
 end

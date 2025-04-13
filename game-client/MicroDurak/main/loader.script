@@ -1,11 +1,8 @@
-local param = require("main.param")
 
-local function load_collection(proxy_name)
-	msg.post(proxy_name, "load")
-end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
+	self.current_proxy = nil
 end
 
 function final(self) end
@@ -15,10 +12,19 @@ function update(self, dt) end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("load_start_menu") then
 		print("loading start menu")
-		msg.post("#start_menu_proxy", "load")
+		load_collection(self, "#start_menu_proxy")
 	end
+	if message_id == hash("load_game") then
+		print("loading game")
+		load_collection(self, "#game_proxy")
+	end
+	if message_id == hash("load_registration") then
+		print("loading retgistration")
+		load_collection(self, "#registration_proxy")
+	end
+
 	if message_id == hash("proxy_loaded") then
-		print("menu loaded")
+		print(sender)
 		msg.post(sender, "init")
 		msg.post(sender, "enable")
 	end
@@ -27,3 +33,16 @@ end
 function on_input(self, action_id, action) end
 
 function on_reload(self) end
+
+function load_collection(self, proxy)
+	if self.current_proxy then
+		-- unload current proxy
+		msg.post(self.current_proxy, "disable")
+		msg.post(self.current_proxy, "final")
+		msg.post(self.current_proxy, "unload")
+		self.current_proxy = nil
+	end
+	-- load new proxy
+	msg.post(proxy, "load")
+	self.current_proxy = proxy
+end

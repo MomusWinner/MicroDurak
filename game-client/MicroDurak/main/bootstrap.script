@@ -1,16 +1,34 @@
-local param = require("main.param")
-
-go.property("loader", hash("loader#loader"))
+local save = require("main.save_manager")
+local p = require("main.param")
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
-	msg.post("main:/loader#loader", "load_start_menu", {})
+
+	save.init()
+
+	local token = save.get("token")
+	if token then
+		print("Token: " .. token)
+	else
+		print("Token is null")
+	end
+
+	-- msg.post(loader, "load_registration")
+	if token then
+		msg.post(p.loader, "load_start_menu")
+	else
+		msg.post(p.loader, "load_registration")
+	end
 end
 
 function final(self) end
 
-function update(self, dt) end
+function update(self, dt)
+	save.update(dt)
+end
 
 function on_message(self, message_id, message, sender) end
 
-function on_input(self, action_id, action) end
+function on_input(self, action_id, action)
+	save.on_input(action_id, action)
+end

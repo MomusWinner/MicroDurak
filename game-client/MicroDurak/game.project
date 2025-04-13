@@ -18,4 +18,13 @@ scale_mode = stretch
 [project]
 title = MicroDurak
 dependencies#0 = https://github.com/Insality/druid/archive/refs/tags/1.0.1.zip
+dependencies#1 = https://github.com/subsoap/defsave/archive/master.zip
+
+[input]
+game_binding = /builtins/input/all.input_bindingc
+
+[render]
+clear_color_red = 0.03
+clear_color_green = 0.08
+clear_color_blue = 0.12
 

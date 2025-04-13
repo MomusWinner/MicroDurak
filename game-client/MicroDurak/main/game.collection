@@ -1,2 +1,16 @@
 name: "game"
 scale_along_z: 0
+embedded_instances {
+  id: "game_manager"
+  data: "components {\n"
+  "  id: \"game_manager\"\n"
+  "  component: \"/main/game_manager.script\"\n"
+  "}\n"
+  "embedded_components {\n"
+  "  id: \"card_factory\"\n"
+  "  type: \"factory\"\n"
+  "  data: \"prototype: \\\"/main/card/card.go\\\"\\n"
+  "\"\n"
+  "}\n"
+  ""
+}

@@ -1,0 +1,10 @@
+name: "registration"
+scale_along_z: 0
+embedded_instances {
+  id: "gui"
+  data: "components {\n"
+  "  id: \"registration\"\n"
+  "  component: \"/main/gui/registration.gui\"\n"
+  "}\n"
+  ""
+}

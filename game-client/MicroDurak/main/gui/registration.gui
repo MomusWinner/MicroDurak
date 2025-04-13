@@ -1,0 +1,444 @@
+script: "/main/gui/registration.gui_script"
+fonts {
+  name: "text_bold"
+  font: "/druid/fonts/text_bold.font"
+}
+fonts {
+  name: "text_regular"
+  font: "/druid/fonts/text_regular.font"
+}
+fonts {
+  name: "Rubick"
+  font: "/assets/fonts/Rubick.font"
+}
+textures {
+  name: "druid"
+  texture: "/druid/druid.atlas"
+}
+nodes {
+  position {
+    x: 480.0
+    y: 322.0
+  }
+  size {
+    x: 500.0
+    y: 450.0
+  }
+  type: TYPE_BOX
+  id: "registration_panel"
+  yanchor: YANCHOR_TOP
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    x: -200.0
+    y: 160.0
+  }
+  type: TYPE_TEMPLATE
+  id: "username_input"
+  parent: "registration_panel"
+  inherit_alpha: true
+  template: "/main/gui/input.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "username_input/root"
+  parent: "username_input"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_BOX
+  id: "username_input/box"
+  parent: "username_input/root"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "username_input/input_text"
+  parent: "username_input/box"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\230\320\274\321\217"
+  id: "username_input/label"
+  parent: "username_input/root"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: -200.0
+    y: 90.0
+  }
+  type: TYPE_TEMPLATE
+  id: "age_input"
+  parent: "registration_panel"
+  inherit_alpha: true
+  template: "/main/gui/input.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "age_input/root"
+  parent: "age_input"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_BOX
+  id: "age_input/box"
+  parent: "age_input/root"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "age_input/input_text"
+  parent: "age_input/box"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\222\320\276\320\267\321\200\320\260\321\201\321\202"
+  id: "age_input/label"
+  parent: "age_input/root"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: -200.0
+    y: 20.0
+  }
+  type: TYPE_TEMPLATE
+  id: "email_input"
+  parent: "registration_panel"
+  inherit_alpha: true
+  template: "/main/gui/input.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "email_input/root"
+  parent: "email_input"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_BOX
+  id: "email_input/box"
+  parent: "email_input/root"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "email_input/input_text"
+  parent: "email_input/box"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\237\320\276\321\207\321\202\320\260"
+  id: "email_input/label"
+  parent: "email_input/root"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: -200.0
+    y: -50.0
+  }
+  type: TYPE_TEMPLATE
+  id: "password_input"
+  parent: "registration_panel"
+  inherit_alpha: true
+  template: "/main/gui/input.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "password_input/root"
+  parent: "password_input"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_BOX
+  id: "password_input/box"
+  parent: "password_input/root"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "password_input/input_text"
+  parent: "password_input/box"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\237\320\260\321\200\320\276\320\273\321\214"
+  id: "password_input/label"
+  parent: "password_input/root"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 156.0
+    y: -155.0
+  }
+  type: TYPE_TEMPLATE
+  id: "submit"
+  parent: "registration_panel"
+  inherit_alpha: true
+  template: "/main/gui/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "submit/box"
+  parent: "submit"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\224\320\260\320\273\320\265\320\265\n"
+  ""
+  id: "submit/text"
+  parent: "submit/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    y: 226.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "\320\240\320\265\320\263\320\270\321\201\321\202\321\200\320\260\321\206\320\270\321\217"
+  font: "text_bold"
+  id: "title"
+  yanchor: YANCHOR_TOP
+  parent: "registration_panel"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -145.0
+    y: -155.0
+  }
+  type: TYPE_TEMPLATE
+  id: "move_login"
+  parent: "registration_panel"
+  inherit_alpha: true
+  template: "/main/gui/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "move_login/box"
+  parent: "move_login"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\222\321\205\320\276\320\264"
+  id: "move_login/text"
+  parent: "move_login/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    y: -250.0
+  }
+  size {
+    x: 500.0
+    y: 100.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  font: "Rubick"
+  id: "registration_error"
+  yanchor: YANCHOR_TOP
+  parent: "registration_panel"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 480.0
+    y: 322.0
+  }
+  size {
+    x: 500.0
+    y: 450.0
+  }
+  type: TYPE_BOX
+  id: "login_panel"
+  yanchor: YANCHOR_TOP
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    x: -200.0
+    y: 160.0
+  }
+  type: TYPE_TEMPLATE
+  id: "login_email_input"
+  parent: "login_panel"
+  inherit_alpha: true
+  template: "/main/gui/input.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "login_email_input/root"
+  parent: "login_email_input"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_BOX
+  id: "login_email_input/box"
+  parent: "login_email_input/root"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "login_email_input/input_text"
+  parent: "login_email_input/box"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\237\320\276\321\207\321\202\320\260"
+  id: "login_email_input/label"
+  parent: "login_email_input/root"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: -200.0
+    y: 77.0
+  }
+  type: TYPE_TEMPLATE
+  id: "login_password_input"
+  parent: "login_panel"
+  inherit_alpha: true
+  template: "/main/gui/input.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "login_password_input/root"
+  parent: "login_password_input"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_BOX
+  id: "login_password_input/box"
+  parent: "login_password_input/root"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "login_password_input/input_text"
+  parent: "login_password_input/box"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\237\320\260\321\200\320\276\320\273\321\214"
+  id: "login_password_input/label"
+  parent: "login_password_input/root"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 154.0
+    y: -7.0
+  }
+  type: TYPE_TEMPLATE
+  id: "login_submit"
+  parent: "login_panel"
+  inherit_alpha: true
+  template: "/main/gui/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "login_submit/box"
+  parent: "login_submit"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\222\320\276\320\271\321\202\320\270"
+  id: "login_submit/text"
+  parent: "login_submit/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    y: 226.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "\320\222\320\276\320\271\321\202\320\270"
+  font: "text_bold"
+  id: "login_title"
+  yanchor: YANCHOR_TOP
+  parent: "login_panel"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -134.0
+    y: -7.0
+  }
+  type: TYPE_TEMPLATE
+  id: "move_registration"
+  parent: "login_panel"
+  inherit_alpha: true
+  template: "/main/gui/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "move_registration/box"
+  parent: "move_registration"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "\320\240\320\265\320\263\320\270\321\201\321\202\321\200\320\260\321\206\320\270\321\217"
+  id: "move_registration/text"
+  parent: "move_registration/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    y: -102.0
+  }
+  size {
+    x: 500.0
+    y: 100.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  font: "Rubick"
+  id: "login_error"
+  yanchor: YANCHOR_TOP
+  parent: "login_panel"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

@@ -1,0 +1,159 @@
+local druid = require("druid.druid")
+local save = require("main.save_manager")
+local input = require("druid.extended.input")
+local p = require("main.param")
+
+local name_button_start = "button_start"
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	druid.register("input", input)
+	self.druid = druid.new(self)
+
+	self.login_panel = gui.get_node("login_panel")
+	self.registration_panel = gui.get_node("registration_panel")
+
+	register_registration_panel(self)
+	register_login_panel(self)
+
+	hide_registration(self)
+end
+
+function final(self)
+	self.druid:final()
+end
+
+function update(self, dt)
+	self.druid:update(dt)
+end
+
+function on_message(self, message_id, message, sender)
+	self.druid:on_message(message_id, message, sender)
+end
+
+function on_input(self, action_id, action)
+	return self.druid:on_input(action_id, action)
+end
+
+function on_reload(self)
+	self.druid:on_reload()
+end
+
+function register_registration_panel(self)
+	-- USERNAME
+	self.username_input = self.druid:new_input("username_input/box", "username_input/input_text")
+	self.username_input.on_input_unselect:subscribe(function(_, text)
+		self.username = text
+	end)
+
+	-- AGE
+	self.age_input = self.druid:new_input("age_input/box", "age_input/input_text")
+	self.age_input.on_input_unselect:subscribe(function(_, text)
+		self.age = text
+	end)
+	self.age_input:set_allowed_characters("[%d]")
+
+	-- EMAIL
+	self.email_input = self.druid:new_input("email_input/box", "email_input/input_text")
+	self.email_input.on_input_unselect:subscribe(function(_, text)
+		self.email = text
+	end)
+
+	-- PASSWORD
+	self.password_input =
+		self.druid:new_input("password_input/box", "password_input/input_text", gui.KEYBOARD_TYPE_PASSWORD)
+	self.password_input.on_input_unselect:subscribe(function(_, text)
+		self.password = text
+	end)
+
+	-- SUBMIT
+	self.submit = self.druid:new_button("submit/box", function()
+		print(self.username)
+		print(self.age)
+		print(self.email)
+		print(self.password)
+		if self.username == nil or self.age == nil or self.email == nil or self.password == nil then
+			self.registration_error:set_to("Все поля должны быть заполнены")
+			return
+		end
+		if not check_email(self, self.email) then
+			self.registration_error:set_to("Неправильная почта")
+			return
+		end
+
+		self.registration_error:set_to("")
+		save.set("token", "test")
+		msg.post(p.loader, "load_start_menu")
+	end)
+
+	-- MOVE TO LOGIN
+	self.move_login = self.druid:new_button("move_login/box", function()
+		hide_registration(self)
+		show_login(self)
+	end)
+
+	-- ERROR
+	self.registration_error = self.druid:new_text("registration_error")
+end
+
+function register_login_panel(self)
+	-- LOGIN USERNAME
+	self.login_email_input = self.druid:new_input("login_email_input/box", "login_email_input/input_text")
+	self.login_email_input.on_input_unselect:subscribe(function(_, text)
+		self.login_email = text
+	end)
+
+	-- LOGIN PASSWORD
+	self.password_input =
+		self.druid:new_input("login_password_input/box", "login_password_input/input_text", gui.KEYBOARD_TYPE_PASSWORD)
+	self.password_input.on_input_unselect:subscribe(function(_, text)
+		self.password = text
+	end)
+
+	-- LOGIN SUBMIT
+	self.login_submit = self.druid:new_button("login_submit/box", function()
+		print(self.login_email)
+		print(self.login_password)
+		if self.login_email == nil or self.login_password then
+			self.login_error:set_to("Все поля должны быть заполнены")
+			return
+		end
+		if not check_email(self, self.login_email) then
+			self.login_error:set_to("Неправильная почта")
+			return
+		end
+
+		self.login_error:set_to("")
+		save.set("token", "test")
+		msg.post(p.loader, "load_start_menu")
+	end)
+
+	-- MOVE TO REGISTRATION
+	self.login_submit = self.druid:new_button("move_registration/box", function()
+		hide_login(self)
+		show_registration(self)
+	end)
+
+	-- LOGIN ERROR
+	self.login_error = self.druid:new_text("login_error")
+end
+
+function hide_login(self)
+	gui.set_enabled(self.login_panel, false)
+end
+
+function show_login(self)
+	gui.set_enabled(self.login_panel, true)
+end
+
+function hide_registration(self)
+	gui.set_enabled(self.registration_panel, false)
+end
+
+function show_registration(self)
+	gui.set_enabled(self.registration_panel, true)
+end
+
+function check_email(self, email)
+	return email:match("[A-Za-z0-9%.]+@[%a%d]+%.[%a%d]+")
+end

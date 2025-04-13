@@ -11,3 +11,13 @@ If you run into trouble, help is available in [our forum](https://forum.defold.c
 Happy Defolding!
 
 ---
+
+base color's
+- #08141e 
+- #0f2a3f 
+- #20394f 
+- #f6d6bd
+- #c3a38a 
+- #997577 
+- #816271
+- #4e495f 
