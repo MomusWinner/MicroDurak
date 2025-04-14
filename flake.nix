@@ -35,7 +35,8 @@
           # goimports, godoc, lsp, etc.
           gotools
           gopls
-          defold.packages."x86_64-linux".default
+
+          # defold.packages."x86_64-linux".default
 
           # db stuff
           sqlc
