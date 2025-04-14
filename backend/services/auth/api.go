@@ -8,17 +8,7 @@ import (
 )
 
 func AddRoutes(e *echo.Echo, config *config.Config, queries *database.Queries) {
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ac := &handlers.AuthContext{
-				Context:   c,
-				Config:    config,
-				DBQueries: queries,
-			}
-			return next(ac)
-		}
-	})
-
-	e.POST("/register", handlers.RegisterHandler)
-	e.POST("/login", handlers.LoginHandler)
+	h := handlers.Handler{DBQueries: queries, Config: config}
+	e.POST("/register", h.Register)
+	e.POST("/login", h.Login)
 }
