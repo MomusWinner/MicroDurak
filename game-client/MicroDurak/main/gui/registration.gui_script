@@ -153,10 +153,12 @@ function login(self)
 			print("token: " .. rbody.token)
 			save.set("token", "test")
 			msg.post(p.loader, "load_start_menu")
+		elseif response.status == 403 then
+			self.login_error:set_to("Неправильная почта или пароль")
 		else
 			print("STATUSCODE: " .. response.status)
 			pprint(response.response)
-			self.registration_error:set_to("Упс")
+			self.login_error:set_to("Упс")
 			return
 		end
 	end)
