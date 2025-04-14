@@ -1,6 +1,6 @@
 fonts {
-  name: "RubickBold"
-  font: "/assets/fonts/RubickBold.font"
+  name: "RubikBold"
+  font: "/assets/fonts/RubikBold.font"
 }
 nodes {
   size {
@@ -24,7 +24,7 @@ nodes {
   }
   type: TYPE_TEXT
   text: "Button"
-  font: "RubickBold"
+  font: "RubikBold"
   id: "text"
   parent: "box"
   inherit_alpha: true

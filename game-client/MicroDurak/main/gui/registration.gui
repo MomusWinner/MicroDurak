@@ -9,7 +9,7 @@ fonts {
 }
 fonts {
   name: "Rubick"
-  font: "/assets/fonts/Rubick.font"
+  font: "/assets/fonts/Rubik.font"
 }
 textures {
   name: "druid"
