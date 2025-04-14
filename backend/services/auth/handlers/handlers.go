@@ -6,14 +6,18 @@ import (
 	"net/http"
 
 	"github.com/MommusWinner/MicroDurak/internal/database"
+	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/services/auth/utils"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 )
 
 type Handler struct {
-	DBQueries *database.Queries
-	Config    *config.Config
+	DBQueries     *database.Queries
+	Config        *config.Config
+	PlayersClient players.PlayersClient
 }
 
 type AuthResponse struct {
@@ -47,9 +51,9 @@ func (h *Handler) Register(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Email Taken")
 	}
 
-	playerId, err := h.DBQueries.CreatePlayer(ctx, database.CreatePlayerParams{
+	rep, err := h.PlayersClient.CreatePlayer(ctx, &players.CreatePlayerRequest{
 		Name: r.Name,
-		Age:  r.Age,
+		Age:  int32(r.Age),
 	})
 	if err != nil {
 		c.Logger().Error(err)
@@ -62,8 +66,9 @@ func (h *Handler) Register(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
 	}
 
+	playerId, err := uuid.Parse(rep.Id)
 	authId, err := h.DBQueries.CreateAuth(ctx, database.CreateAuthParams{
-		PlayerID: playerId,
+		PlayerID: pgtype.UUID{Valid: true, Bytes: playerId},
 		Email:    r.Email,
 		Password: hashedPassword,
 	})
