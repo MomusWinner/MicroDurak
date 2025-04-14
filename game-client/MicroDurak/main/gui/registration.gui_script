@@ -1,9 +1,8 @@
 local druid = require("druid.druid")
 local save = require("main.save_manager")
 local input = require("druid.extended.input")
+local request = require("main.request")
 local p = require("main.param")
-
-local name_button_start = "button_start"
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
@@ -68,22 +67,7 @@ function register_registration_panel(self)
 
 	-- SUBMIT
 	self.submit = self.druid:new_button("submit/box", function()
-		print(self.username)
-		print(self.age)
-		print(self.email)
-		print(self.password)
-		if self.username == nil or self.age == nil or self.email == nil or self.password == nil then
-			self.registration_error:set_to("Все поля должны быть заполнены")
-			return
-		end
-		if not check_email(self, self.email) then
-			self.registration_error:set_to("Неправильная почта")
-			return
-		end
-
-		self.registration_error:set_to("")
-		save.set("token", "test")
-		msg.post(p.loader, "load_start_menu")
+		register(self)
 	end)
 
 	-- MOVE TO LOGIN
@@ -107,25 +91,12 @@ function register_login_panel(self)
 	self.password_input =
 		self.druid:new_input("login_password_input/box", "login_password_input/input_text", gui.KEYBOARD_TYPE_PASSWORD)
 	self.password_input.on_input_unselect:subscribe(function(_, text)
-		self.password = text
+		self.login_password = text
 	end)
 
 	-- LOGIN SUBMIT
 	self.login_submit = self.druid:new_button("login_submit/box", function()
-		print(self.login_email)
-		print(self.login_password)
-		if self.login_email == nil or self.login_password then
-			self.login_error:set_to("Все поля должны быть заполнены")
-			return
-		end
-		if not check_email(self, self.login_email) then
-			self.login_error:set_to("Неправильная почта")
-			return
-		end
-
-		self.login_error:set_to("")
-		save.set("token", "test")
-		msg.post(p.loader, "load_start_menu")
+		login(self)
 	end)
 
 	-- MOVE TO REGISTRATION
@@ -156,4 +127,75 @@ end
 
 function check_email(self, email)
 	return email:match("[A-Za-z0-9%.]+@[%a%d]+%.[%a%d]+")
+end
+
+function login(self)
+	print(self.login_email)
+	print(self.login_password)
+	if self.login_email == nil or self.login_password == nil then
+		self.login_error:set_to("Все поля должны быть заполнены")
+		return
+	end
+	if not check_email(self, self.login_email) then
+		self.login_error:set_to("Неправильная почта")
+		return
+	end
+
+	request.login({ email = self.login_email, password = self.login_password }, function(self, id, response)
+		if response.status == 200 then
+			local rbody = json.decode(response.response)
+			print(rbody)
+			print("token: " .. rbody.token)
+			if rbody.token == nil then
+				self.registration_error:set_to("Упс")
+				return
+			end
+			print("token: " .. rbody.token)
+			save.set("token", "test")
+			msg.post(p.loader, "load_start_menu")
+		else
+			print("STATUSCODE: " .. response.status)
+			pprint(response.response)
+			self.registration_error:set_to("Упс")
+			return
+		end
+	end)
+end
+
+function register(self)
+	print(self.username)
+	print(self.age)
+	print(self.email)
+	print(self.password)
+	if self.username == nil or self.age == nil or self.email == nil or self.password == nil then
+		self.registration_error:set_to("Все поля должны быть заполнены")
+		return
+	end
+	if not check_email(self, self.email) then
+		self.registration_error:set_to("Неправильная почта")
+		return
+	end
+
+	request.register(
+		{ name = self.username, age = tonumber(self.age), email = self.email, password = self.password },
+		function(self, id, response)
+			if response.status == 201 then
+				local rbody = json.decode(response.response)
+				print(rbody)
+				print("token: " .. rbody.token)
+				if rbody.token == nil then
+					self.registration_error:set_to("Упс")
+					return
+				end
+				print("token: " .. rbody.token)
+				save.set("token", "test")
+				msg.post(p.loader, "load_start_menu")
+			else
+				print("STATUSCODE: " .. response.status)
+				pprint(response.response)
+				self.registration_error:set_to("Упс")
+				return
+			end
+		end
+	)
 end

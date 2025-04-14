@@ -28,3 +28,6 @@ clear_color_red = 0.03
 clear_color_green = 0.08
 clear_color_blue = 0.12
 
+[network]
+http_timeout = 2000.0
+
