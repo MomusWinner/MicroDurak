@@ -1,4 +1,4 @@
-font: "/assets/fonts/Rubick/Rubik-Bold.ttf"
+font: "/assets/fonts/Rubik/Rubik-Bold.ttf"
 material: "/builtins/fonts/font.material"
 size: 20
 all_chars: true

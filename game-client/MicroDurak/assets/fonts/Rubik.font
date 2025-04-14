@@ -1,4 +1,4 @@
-font: "/assets/fonts/Rubick/Rubik-Medium.ttf"
+font: "/assets/fonts/Rubik/Rubik-Medium.ttf"
 material: "/builtins/fonts/font.material"
 size: 20
 all_chars: true

@@ -1,10 +1,10 @@
 fonts {
   name: "Rubick"
-  font: "/assets/fonts/Rubick.font"
+  font: "/assets/fonts/Rubik.font"
 }
 fonts {
   name: "RubickBold"
-  font: "/assets/fonts/RubickBold.font"
+  font: "/assets/fonts/RubikBold.font"
 }
 nodes {
   size {
