@@ -10,19 +10,48 @@ services:
     environment:
       JWT_PRIVATE: ${JWT_PRIVATE}
       DATABASE_URL: "user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} host=database sslmode=disable"
+      PLAYERS_URL: "players:9090"
     depends_on:
       database:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
 
+  players:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: players
+    environment:
+      JWT_PUBLIC: ${JWT_PUBLIC}
+      DATABASE_URL: "user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} host=database sslmode=disable"
+    depends_on:
+      database:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+
+  redis:
+   image: redis:7.4-alpine3.21
+   restart: unless-stopped
+   environment:
+     REDIS_PASSWORD: ${REDIS_PASS}
+   healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+  
+
   database:
     image: postgres:17.4-alpine3.21
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - 127.0.0.1:6969:5432
     volumes:
@@ -49,6 +78,5 @@ services:
       command:
         - "./goose"
         - "up"
-
 volumes:
   database-data:

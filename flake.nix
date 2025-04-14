@@ -42,6 +42,10 @@
           sqlc
           goose
 
+          protobuf
+          protoc-gen-go
+          protoc-gen-go-grpc
+
           # generate rsa priv/pub keys for jwt
           openssl
         ];

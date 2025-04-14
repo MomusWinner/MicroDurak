@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package="./;players";
+
+service Players {
+  rpc CreatePlayer (CreatePlayerRequest) returns (CreatePlayerReply) {}
+}
+
+message PlayerService {
+  string id = 1;
+  string name = 2;
+  int32 age = 3;
+  int32 rating = 4;
+}
+
+message CreatePlayerRequest {
+  string name = 1;
+  int32 age = 2;
+}
+
+message CreatePlayerReply {
+  string id = 1;
+}
