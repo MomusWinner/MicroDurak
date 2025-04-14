@@ -11,18 +11,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func main() {
-	e := echo.New()
-	ctx := context.Background()
-
+func run(e *echo.Echo, ctx context.Context) error {
 	config, err := config.Load()
 	if err != nil {
-		e.Logger.Fatal(err)
+		return err
 	}
 
 	conn, err := pgx.Connect(ctx, config.DatabaseURL)
 	if err != nil {
-		e.Logger.Fatal(err)
+		return err
 	}
 	defer conn.Close(ctx)
 
@@ -30,5 +27,14 @@ func main() {
 
 	auth.AddRoutes(e, config, queries)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	return e.Start(":8080")
+}
+
+func main() {
+	e := echo.New()
+	ctx := context.Background()
+
+	if err := run(e, ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
