@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/MommusWinner/MicroDurak/database"
+	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/services/auth/utils"
 	"github.com/labstack/echo/v4"

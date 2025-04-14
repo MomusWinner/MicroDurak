@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/MommusWinner/MicroDurak/database"
+	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/services/auth"
 	"github.com/MommusWinner/MicroDurak/services/auth/config"
 	"github.com/jackc/pgx/v5"

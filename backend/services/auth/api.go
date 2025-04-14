@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/MommusWinner/MicroDurak/database"
+	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/services/auth/handlers"
 	"github.com/labstack/echo/v4"

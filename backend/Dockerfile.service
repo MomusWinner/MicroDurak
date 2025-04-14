@@ -7,7 +7,7 @@ WORKDIR /micro-durak/$SERVICE_NAME
 COPY ./cmd ./cmd
 COPY ./services ./services
 COPY ./lib ./lib
-COPY ./database ./database
+COPY ./internal ./internal
 COPY ./go.mod ./go.sum ./
 
 RUN go build -o app ./cmd/$SERVICE_NAME/main.go
