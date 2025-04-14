@@ -16,13 +16,26 @@ type Handler struct {
 	Config    *config.Config
 }
 
+type AuthResponse struct {
+	Token string `json:"token"`
+}
+
 func (h *Handler) Register(c echo.Context) error {
 	ctx := c.Request().Context()
 
+	type RegisterRequest struct {
+		Name     string `json:"name" validate:"required"`
+		Age      int16  `json:"age" validate:"required,gte=0,lte=130"`
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required"`
+	}
+
 	r := new(RegisterRequest)
 	if err := c.Bind(r); err != nil {
-		c.Logger().Error(err)
-		return c.String(http.StatusBadRequest, "bad request")
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	if err := c.Validate(r); err != nil {
+		return err
 	}
 
 	isEmailTaken, err := h.DBQueries.CheckEmail(ctx, r.Email)
@@ -59,22 +72,23 @@ func (h *Handler) Register(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	type RegisterResponse struct {
-		Token string `json:"token"`
-	}
-
 	jwt, err := utils.GenerateToken(h.Config.JWTPrivate, authId.String())
 	if err != nil {
 		c.Logger().Error(err)
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	return c.JSON(http.StatusCreated, RegisterResponse{
+	return c.JSON(http.StatusCreated, AuthResponse{
 		Token: jwt,
 	})
 }
 
 func (h *Handler) Login(c echo.Context) error {
+	type LoginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
 	r := new(LoginRequest)
 	if err := c.Bind(r); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
