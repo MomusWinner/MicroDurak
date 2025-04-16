@@ -9,6 +9,7 @@ COPY ./services ./services
 COPY ./lib ./lib
 COPY ./internal ./internal
 COPY ./go.mod ./go.sum ./
+COPY ./vendor ./vendor
 
 RUN go build -o app ./cmd/$SERVICE_NAME/main.go
 
