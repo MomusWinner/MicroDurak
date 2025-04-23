@@ -28,3 +28,19 @@ func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (pgt
 	err := row.Scan(&id)
 	return id, err
 }
+
+const getPlayerById = `-- name: GetPlayerById :one
+select id, name, age, rating from player where id = $1
+`
+
+func (q *Queries) GetPlayerById(ctx context.Context, id pgtype.UUID) (Player, error) {
+	row := q.db.QueryRow(ctx, getPlayerById, id)
+	var i Player
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Age,
+		&i.Rating,
+	)
+	return i, err
+}
