@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,9 +17,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type MatchStatus string
+
+const (
+	MatchStatusSearching = "searching"
+	MatchStatusFound     = "found"
+)
+
 var (
 	upgrader = websocket.Upgrader{}
 )
+
+type FindMatchResponse struct {
+	Status MatchStatus `json:"status"`
+	GameId string      `json:"game_id,omitempty"`
+}
 
 type Handler struct {
 	Queue         chan<- types.MatchChan
@@ -84,16 +97,19 @@ func (h *Handler) FindMatch(c echo.Context) error {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				err := ws.WriteMessage(websocket.PingMessage, []byte{})
+				resp := FindMatchResponse{
+					Status: MatchStatusSearching,
+					GameId: "",
+				}
+
+				respString, _ := json.Marshal(resp)
+				err := ws.WriteMessage(websocket.TextMessage, []byte(respString))
 				if err != nil {
 					metrics.WebsocketWriteErrors.Inc()
 					c.Logger().Error(err)
 				}
 
-				_, _, err = ws.ReadMessage()
-				if err != nil {
-					c.Logger().Error(err)
-				}
+				ws.ReadMessage()
 			}
 		}
 	}()
@@ -111,10 +127,13 @@ func (h *Handler) FindMatch(c echo.Context) error {
 
 	roomId := <-returnChan
 
-	type FindMatchResponse struct {
-		RoomId string `json:"room_id"`
+	resp := FindMatchResponse{
+		Status: MatchStatusFound,
+		GameId: roomId.RoomId,
 	}
-	ws.WriteMessage(websocket.TextMessage, []byte(roomId.RoomId))
+
+	respString, _ := json.Marshal(resp)
+	ws.WriteMessage(websocket.TextMessage, respString)
 
 	closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Connection closed")
 	err = ws.WriteControl(websocket.CloseMessage, closeMsg, time.Now().Add(time.Second))
