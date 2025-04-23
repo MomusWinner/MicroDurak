@@ -1,14 +1,29 @@
-package matchmaker
+package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"github.com/MommusWinner/MicroDurak/internal/game/v1"
+	"github.com/MommusWinner/MicroDurak/internal/players/v1"
+	"github.com/MommusWinner/MicroDurak/lib/jwt"
+	"github.com/MommusWinner/MicroDurak/services/matchmaker"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
+	"github.com/MommusWinner/MicroDurak/services/matchmaker/handlers"
+	"github.com/MommusWinner/MicroDurak/services/matchmaker/types"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func run(ctx context.Context) error {
+func run(ctx context.Context, e *echo.Echo) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	config, err := config.Load()
 	if err != nil {
 		return err
@@ -18,26 +33,68 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	redisClient := redis.NewClient(opt)
 
-	client := redis.NewClient(opt)
-
-	res := client.ZRangeByScore(ctx, "matchmaking:queue", &redis.ZRangeBy{Min: "1400", Max: "1600"})
-	if res.Err() != nil {
-		return res.Err()
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	err = client.ZAdd(ctx, "matchmaking:queue", redis.Z{Score: 1500, Member: "hello"}).Err()
+	playerClientConn, err := grpc.NewClient(config.PlayersURL, opts...)
 	if err != nil {
 		return err
 	}
+	playerClient := players.NewPlayersClient(playerClientConn)
 
-	return nil
+	gameClientConn, err := grpc.NewClient(config.GameURL, opts...)
+	if err != nil {
+		return err
+	}
+	gameClient := game.NewGameClient(gameClientConn)
+
+	queueChan := make(chan types.MatchChan)
+	m := matchmaker.New(queueChan, config, redisClient, gameClient)
+
+	handlers.AddRoutes(e, queueChan, config, playerClient)
+	e.Use(jwt.AuthMiddleware(config.JWTPublic))
+
+	errChan := make(chan error, 2)
+
+	go func() { errChan <- m.Start(ctx) }()
+	go func() { errChan <- e.Start(":" + config.Port) }()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	shutdownServices := func(shutdownErr error) error {
+		cancel()
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
+		if err := e.Shutdown(shutdownCtx); err != nil {
+			e.Logger.Errorf("Failed to shutdown Echo server: %v", err)
+			// Return original error if exists, otherwise return shutdown error
+			if shutdownErr != nil {
+				return shutdownErr
+			}
+			return err
+		}
+		return shutdownErr
+	}
+
+	select {
+	case err := <-errChan:
+		return shutdownServices(err)
+	case <-quit:
+		e.Logger.Info("\nShutting down servers...")
+		// Graceful shutdown without initial error
+		return shutdownServices(nil)
+	}
 }
 
 func main() {
 	e := echo.New()
 	ctx := context.Background()
-	if err := run(ctx); err != nil {
+	if err := run(ctx, e); err != nil {
 		e.Logger.Fatal(err)
 	}
 }

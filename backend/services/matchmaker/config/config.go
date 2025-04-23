@@ -5,10 +5,12 @@ import (
 )
 
 type Config struct {
-	JWTPublic string `help:"Base64 Private key for the jwt" env:"JWT_PUBLIC" required:"true"`
-	Port      string `help:"Port to listen on" env:"PORT" default:"8080"`
-	RedisURL  string `help:"Redis connection URL" env:"REDIS_URL" required:"true"`
-	LogLevel  string `help:"Log level (debug, info, warn, error)" env:"LOG_LEVEL" default:"info"`
+	JWTPublic  string `help:"Base64 Private key for the jwt"          env:"JWT_PUBLIC" required:"true"`
+	Port       string `help:"Port to listen on"                       env:"PORT" default:"8080"`
+	RedisURL   string `help:"Redis connection URL"                    env:"REDIS_URL" required:"true"`
+	PlayersURL string `help:"URL pointing to the Players Service"  env:"PLAYERS_URL" required:"true"`
+	GameURL    string `help:"URL pointing to the Game Service"  env:"GAME_URL" required:"true"`
+	LogLevel   string `help:"Log level (debug, info, warn, error)"    env:"LOG_LEVEL" default:"info"`
 }
 
 func Load() (*Config, error) {
