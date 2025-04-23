@@ -7,8 +7,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func VerifyToken(PubKeyEncoded string, tokenString string) (jwt.Claims, error) {
-	pemBytes, err := base64.StdEncoding.DecodeString(PubKeyEncoded)
+func VerifyToken(pubKeyEncoded string, tokenString string) (jwt.Claims, error) {
+	pemBytes, err := base64.StdEncoding.DecodeString(pubKeyEncoded)
 	if err != nil {
 		return nil, err
 	}
