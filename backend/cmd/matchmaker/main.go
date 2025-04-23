@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/MommusWinner/MicroDurak/internal/game/v1"
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/lib/jwt"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker"
@@ -32,23 +33,28 @@ func run(ctx context.Context, e *echo.Echo) error {
 	if err != nil {
 		return err
 	}
-	client := redis.NewClient(opt)
+	redisClient := redis.NewClient(opt)
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	clientConn, err := grpc.NewClient(config.PlayersURL, opts...)
+	playerClientConn, err := grpc.NewClient(config.PlayersURL, opts...)
 	if err != nil {
 		return err
 	}
+	playerClient := players.NewPlayersClient(playerClientConn)
 
-	playersClient := players.NewPlayersClient(clientConn)
+	gameClientConn, err := grpc.NewClient(config.GameURL, opts...)
+	if err != nil {
+		return err
+	}
+	gameClient := game.NewGameClient(gameClientConn)
 
 	queueChan := make(chan types.MatchChan)
-	m := matchmaker.New(queueChan, config, client)
+	m := matchmaker.New(queueChan, config, redisClient, gameClient)
 
-	handlers.AddRoutes(e, queueChan, config, playersClient)
+	handlers.AddRoutes(e, queueChan, config, playerClient)
 	e.Use(jwt.AuthMiddleware(config.JWTPublic))
 
 	errChan := make(chan error, 2)

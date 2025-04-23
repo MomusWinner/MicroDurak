@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
+	"github.com/MommusWinner/MicroDurak/internal/game/v1"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
 	rc "github.com/MommusWinner/MicroDurak/services/matchmaker/redis"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker/types"
@@ -18,16 +18,21 @@ const increaceRangeBy = 100
 const groupSize = 2
 
 type Matchmaker struct {
-	queueChan    <-chan types.MatchChan
-	queue        map[string]types.MatchChan
-	config       *config.Config
-	playerClient *rc.PlayerClient
+	queueChan      <-chan types.MatchChan
+	queue          map[string]types.MatchChan
+	config         *config.Config
+	playerClient   *rc.PlayerClient
+	gameGRPCClient game.GameClient
 }
 
-func New(queueChan <-chan types.MatchChan, config *config.Config, redisClient *redis.Client) *Matchmaker {
+func New(queueChan <-chan types.MatchChan,
+	config *config.Config,
+	redisClient *redis.Client,
+	gameGRPCClient game.GameClient,
+) *Matchmaker {
 	playerClient := rc.NewClient(redisClient)
 	queue := make(map[string]types.MatchChan)
-	return &Matchmaker{queueChan, queue, config, playerClient}
+	return &Matchmaker{queueChan, queue, config, playerClient, gameGRPCClient}
 }
 
 func (m *Matchmaker) Start(
@@ -55,7 +60,10 @@ func (m *Matchmaker) Start(
 			if len(m.queue) == 0 {
 				continue
 			}
-			m.matchmake(ctx)
+			err := m.matchmake(ctx)
+			if err != nil {
+				return err
+			}
 			fmt.Println("----------")
 		}
 	}
@@ -83,6 +91,7 @@ func (m *Matchmaker) matchmake(ctx context.Context) error {
 			err := m.handleMoved(ctx, storedPlayer)
 			var gidError types.ErrGroupTooSmall
 			if errors.As(err, &gidError) {
+				fmt.Println(err)
 				continue
 			} else if err != nil {
 				return err
@@ -162,9 +171,14 @@ func (m *Matchmaker) handleMoved(
 		return err
 	}
 
+	gameId, err := m.gameGRPCClient.CreateGame(ctx, &game.CreateGameRequest{UserIds: grouppedPlayers})
+	if err != nil {
+		return err
+	}
+
 	response := types.MatchResponse{
 		Status: types.MatchFound,
-		RoomId: strconv.Itoa(storedPlayer.Gid),
+		RoomId: gameId.GameId,
 	}
 
 	for _, grouppedPlayer := range grouppedPlayers {
