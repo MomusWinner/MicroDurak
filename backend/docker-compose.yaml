@@ -1,4 +1,46 @@
 services:
+
+  game:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: game
+    ports:
+      - 127.0.0.1:7077:7077
+    environment:
+      RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@${RABBIT_HOST}:${RABBIT_PORT}/"
+      REDIS_URL: "redis://:${REDIS_PASS}@redis:6379/0"
+      JWT_PUBLIC: ${JWT_PUBLIC}
+      PLAYERS_URL: "players:9090"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  game-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: game-manager
+    ports:
+      - 127.0.0.1:7070:7070
+    environment:
+      RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@${RABBIT_HOST}:${RABBIT_PORT}/"
+      JWT_PUBLIC: ${JWT_PUBLIC}
+      PLAYERS_URL: "players:9090"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
   auth:
     build:
       context: .
@@ -32,7 +74,6 @@ services:
       migrate:
         condition: service_completed_successfully
 
-
   redis:
    image: redis:7.4-alpine3.21
    restart: unless-stopped
@@ -44,6 +85,16 @@ services:
       timeout: 3s
       retries: 5
   
+  rabbitmq:
+    image: rabbitmq:3.13.7-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 15s
+      timeout: 10s
+      retries: 4
 
   database:
     image: postgres:17.4-alpine3.21
@@ -78,5 +129,6 @@ services:
       command:
         - "./goose"
         - "up"
+
 volumes:
   database-data:
