@@ -74,20 +74,5 @@ func playerGameResultToString(gr players.GameResult) string {
 }
 
 func (ps *PlayerService) CreateMatchResult(ctx context.Context, req *players.CreateMatchResultRequest) (*players.CreateMatchResultResponse, error) {
-	match, err := ps.DBQueries.CreateMatchResult(ctx, database.CreateMatchResultParams{
-		PlayerCount: int16(len(req.PlayerPlacements)),
-		GameResult:  database.GameResult(playerGameResultToString(req.GameResult)),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, player := range req.PlayerPlacements {
-		playerId, err := uuid.Parse(player.PlayerId)
-		if err != nil {
-			return nil, status.New(codes.InvalidArgument, "player_id is not a uuid").Err()
-		}
-
-		ps.DBQueries.AddPlayerPlacement(ctx)
-	}
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMatchResult not implemented")
 }
