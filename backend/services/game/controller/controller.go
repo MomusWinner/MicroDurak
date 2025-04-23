@@ -30,8 +30,8 @@ func NewGameController(
 	}
 }
 
-func (gc GameController) CreateGame(userIds []string) {
-	core.CreateNewGameAndSaveInRedis(gc.Redis, userIds)
+func (gc GameController) CreateGame(userIds []string) (*core.Game, error) {
+	return core.CreateNewGameAndSaveInRedis(gc.Redis, userIds)
 }
 
 func (gc GameController) LoadGame(gameId string) (*core.Game, error) {
