@@ -8,7 +8,7 @@ services:
     ports:
       - 127.0.0.1:7077:7077
     environment:
-      RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@${RABBIT_HOST}:${RABBIT_PORT}/"
+      RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@rabbitmq:${RABBIT_PORT}/"
       REDIS_URL: "redis://:${REDIS_PASS}@redis:6379/0"
       JWT_PUBLIC: ${JWT_PUBLIC}
       PLAYERS_URL: "players:9090"
@@ -29,7 +29,7 @@ services:
     ports:
       - 127.0.0.1:7070:7070
     environment:
-      RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@${RABBIT_HOST}:${RABBIT_PORT}/"
+      RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@rabbitmq:${RABBIT_PORT}/"
       JWT_PUBLIC: ${JWT_PUBLIC}
       PLAYERS_URL: "players:9090"
     depends_on:
@@ -90,6 +90,7 @@ services:
     environment:
       JWT_PUBLIC: ${JWT_PUBLIC}
       PLAYERS_URL: "players:9090"
+      GAME_URL: "game:9090"
       REDIS_URL: "redis://:${REDIS_PASS}@redis:6379/0"
     depends_on:
       redis:
