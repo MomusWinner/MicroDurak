@@ -1,0 +1,396 @@
+package core
+
+import (
+	"errors"
+	"fmt"
+	"testing"
+	"time"
+)
+
+func checkGameEvents(game *Game, events ...string) error { // TODO
+	error_string := ""
+	error_string += "\nTARGET EVENTS\n"
+	for i, event := range events {
+		error_string += fmt.Sprintf("%d| %s\n", i, event)
+	}
+	error_string += "\nGAME EVENTS\n"
+	for i, event := range game.GameEventBuffer {
+		gameEvent, _ := event.(GameEventContainer)
+		error_string += fmt.Sprintf("%d| %s\n", i, gameEvent.GetGameEvent().Event)
+	}
+
+	if len(game.GameEventBuffer) != len(events) {
+		return errors.New(
+			"\nTarget events length and game evets length is different\n" + error_string,
+		)
+	}
+	for i, event := range events {
+
+		gameEvent, _ := game.GameEventBuffer[i].(GameEventContainer)
+		if gameEvent.GetGameEvent().Event != event {
+			return errors.New(error_string)
+		}
+	}
+
+	game.GameEventBuffer = []GameEventContainer{}
+
+	return nil
+}
+
+func CreateGameWithReadyUsers() (*Game, *User, *User, error) {
+	game, _ := CreateNewGame([]string{"user1", "user2"})
+
+	attackUser, _ := getUserById(game.Users, game.AttackingId)
+	defendUser, _ := getUserById(game.Users, game.DefendingId)
+
+	game.ReadyHandler(Command{
+		Action: ACTION_READY,
+		UserId: attackUser.Id,
+	}, attackUser)
+
+	game.ReadyHandler(Command{
+		Action: ACTION_READY,
+		UserId: defendUser.Id,
+	}, defendUser)
+
+	err := checkGameEvents(game, EVENT_READY, EVENT_START)
+
+	return game, attackUser, defendUser, err
+}
+
+func TestCreateNewGame(t *testing.T) {
+	game, err := CreateNewGame([]string{"test1", "test2"})
+	if err != nil {
+		t.Error(err)
+	}
+	for _, user := range game.Users {
+		if len(user.Cards) != 6 {
+			t.Error("User must have 6 cards.")
+		}
+	}
+
+	_ = game
+}
+
+func TestAttackCycle(t *testing.T) {
+	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// ATTACK
+	attackCard := attackUser.Cards[0]
+	attackC := AttackCommand{
+		Command: Command{
+			Action: ACTION_ATTACK,
+			UserId: attackUser.Id,
+		},
+		Card: attackUser.Cards[0],
+	}
+
+	r := game.AttackHandler(attackC, attackUser)
+	if r.Error != ERROR_EMPTY {
+		t.Error("Attack error CODE: " + r.Error)
+	}
+
+	if len(attackUser.Cards) != 5 {
+		t.Error("The card was not removed after the attack.")
+	}
+
+	if game.TableCards[0].Suit != attackCard.Suit || game.TableCards[0].Rank != attackCard.Rank {
+		t.Error("Table shouldn't be empty after attack")
+	}
+
+	// DEFEND
+	defendUser.Cards[0] = Card{Suit: game.Trump, Rank: 15}
+	defendC := DefendCommand{
+		Command: Command{
+			Action: ACTION_DEFEND,
+			UserId: defendUser.Id,
+		},
+		UserCard:   defendUser.Cards[0],
+		TargetCard: attackCard,
+	}
+
+	r = game.DefendHandler(defendC, defendUser)
+
+	if r.Error != ERROR_EMPTY {
+		t.Error("Defend error CODE: " + r.Error)
+	}
+
+	// END ATTACK
+	game.EndAttackHandler(Command{
+		Action: ACTION_END_ATTACK,
+		UserId: attackUser.Id,
+	}, attackUser)
+
+	if len(attackUser.Cards) != 6 || len(defendUser.Cards) != 6 {
+		t.Error("Atfter attack end game server should hand out the cards.")
+	}
+
+	if game.DefendingId != attackUser.Id || game.AttackingId != defendUser.Id {
+		t.Error("After end attack game should change user roles.")
+	}
+
+	if len(game.TableCards) != 0 {
+		t.Error("After end attack table should be emtpy")
+	}
+
+	err = checkGameEvents(game, EVENT_ATTACK, EVENT_DEFEND, EVENT_END_ATTACK)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestTakeAllCards(t *testing.T) {
+	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	for i := range attackUser.Cards {
+
+		attackUser.Cards[i] = Card{
+			Suit: 1,
+			Rank: 6,
+		}
+	}
+
+	for range 3 {
+		attackC := AttackCommand{
+			Command: Command{
+				Action: ACTION_ATTACK,
+				UserId: attackUser.Id,
+			},
+			Card: attackUser.Cards[0],
+		}
+
+		r := game.AttackHandler(attackC, attackUser)
+		if r.Error != ERROR_EMPTY {
+			t.Error("Attack error CODE: " + r.Error)
+		}
+	}
+
+	// Beat off first card on table
+	game.TableCards[0].BeatOff = &Card{
+		Suit: 1,
+		Rank: 14,
+	}
+
+	rsp := game.TakeAllCardHandler(Command{
+		Action: ACTION_TAKE_ALL_CARDS,
+		UserId: defendUser.Id,
+	}, defendUser)
+
+	if rsp.Error != ERROR_EMPTY {
+		t.Error("TakeAllCard Error: " + rsp.Error)
+	}
+
+	if len(defendUser.Cards) != 10 {
+		t.Error("User should take all cards in table")
+	}
+
+	err = checkGameEvents(
+		game,
+		EVENT_ATTACK,
+		EVENT_ATTACK,
+		EVENT_ATTACK,
+		EVENT_TAKE_ALL_CARDS,
+		EVENT_END_ATTACK,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDefendTimeOver(t *testing.T) {
+	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	game.Settings.TimeOver = 0.0001
+
+	attackUser.Cards[0] = Card{
+		Suit: 1,
+		Rank: 6,
+	}
+
+	attackCard := attackUser.Cards[0]
+	attackC := AttackCommand{
+		Command: Command{
+			Action: ACTION_ATTACK,
+			UserId: attackUser.Id,
+		},
+		Card: attackCard,
+	}
+
+	game.AttackHandler(attackC, attackUser)
+
+	if !game.DefendTimerIsRunning {
+		t.Error("Defend timer should be started")
+	}
+
+	time.Sleep(2 * time.Millisecond)
+	defendUser.Cards[0] = Card{
+		Suit: 1,
+		Rank: 14,
+	}
+
+	defendC := DefendCommand{
+		Command: Command{
+			Action: ACTION_DEFEND,
+			UserId: defendUser.Id,
+		},
+		UserCard:   defendUser.Cards[0],
+		TargetCard: attackCard,
+	}
+
+	r := game.DefendHandler(defendC, defendUser)
+	if r.Error != ERROR_DEFEND_TIME_OVER {
+		t.Error("Defend timer should be time over. ERROR: " + r.Error)
+	}
+
+	err = checkGameEvents(
+		game,
+		EVENT_ATTACK,
+		EVENT_END_ATTACK,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestAttackTimeOver(t *testing.T) {
+	game, attackUser, _, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+	game.Settings.TimeOver = 0.0001
+
+	for i := range 2 {
+		attackUser.Cards[i] = Card{
+			Suit: 1,
+			Rank: 6,
+		}
+	}
+
+	time.Sleep(2 * time.Millisecond)
+
+	attackCard := attackUser.Cards[0]
+	attackC := AttackCommand{
+		Command: Command{
+			Action: ACTION_ATTACK,
+			UserId: attackUser.Id,
+		},
+		Card: attackCard,
+	}
+
+	r := game.AttackHandler(attackC, attackUser)
+
+	if r.Error != ERROR_ATTACK_TIME_OVER {
+		t.Error("Attack timer should be time over. ERROR: " + r.Error)
+	}
+
+	err = checkGameEvents(game, EVENT_END_ATTACK)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCheckAttackTimerStatus(t *testing.T) {
+	game, attackUser, _, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	game.CheckAttackTimerHandler(Command{Action: ACTION_CHECK_ATTACK_TIMER}, attackUser)
+	attackTimerStateEvent := game.GameEventBuffer[0].(AttackTimerStateEvent)
+	if attackTimerStateEvent.Completed == true {
+		t.Error("Timer shouldn't be completed")
+	}
+}
+
+func TestCheckDefendTimerStatus(t *testing.T) {
+	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	attackCard := attackUser.Cards[0]
+	attackC := AttackCommand{
+		Command: Command{
+			Action: ACTION_ATTACK,
+			UserId: attackUser.Id,
+		},
+		Card: attackCard,
+	}
+
+	game.AttackHandler(attackC, attackUser)
+	checkGameEvents(game, EVENT_ATTACK)
+
+	game.CheckDefendTimerHandler(Command{Action: ACTION_CHECK_DEFEND_TIMER}, defendUser)
+	defendTimerStateEvent := game.GameEventBuffer[0].(DefendTimerStateEvent)
+	if defendTimerStateEvent.Completed == true {
+		t.Error("Timer shouldn't be completed")
+	}
+}
+
+func TestGameEnd(t *testing.T) {
+	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	game.Deck = []Card{}
+	attackUser.Cards = []Card{attackUser.Cards[0]}
+
+	// ATTACK
+	attackCard := attackUser.Cards[0]
+	attackC := AttackCommand{
+		Command: Command{
+			Action: ACTION_ATTACK,
+			UserId: attackUser.Id,
+		},
+		Card: attackCard,
+	}
+
+	game.AttackHandler(attackC, attackUser)
+
+	// DEFEND
+	defendUser.Cards[0] = Card{Suit: game.Trump, Rank: 15}
+	defendC := DefendCommand{
+		Command: Command{
+			Action: ACTION_DEFEND,
+			UserId: defendUser.Id,
+		},
+		UserCard:   defendUser.Cards[0],
+		TargetCard: attackCard,
+	}
+
+	r := game.DefendHandler(defendC, defendUser)
+
+	if r.Error != ERROR_EMPTY {
+		t.Error("Defend error CODE: " + r.Error)
+	}
+	rsp := game.EndAttackHandler(Command{
+		Action: ACTION_END_ATTACK,
+		UserId: attackUser.Id,
+	}, attackUser)
+
+	if rsp.Error != ERROR_EMPTY {
+		t.Error("End Attack Action end with error: " + rsp.Error)
+	}
+
+	err = checkGameEvents(game, EVENT_ATTACK, EVENT_DEFEND, EVENT_END_ATTACK)
+	if err != nil {
+		t.Error(err)
+	}
+}

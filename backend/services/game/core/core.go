@@ -4,26 +4,24 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"math/rand/v2"
+	"time"
 
-	"github.com/MommusWinner/MicroDurak/services/game/config"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
-type Command struct {
-	Action string `json:"action"`
-}
-
-type AttackCommand struct {
-	Command
-}
-
-const (
-	ATTACKING_STATE = "attacking"
-	DEFENDING_STATE = "defending"
+var (
+	DefaultGameSettings = GameSettings{
+		TimeOver: 30,
+	}
 )
+
+type GameSettings struct {
+	TimeOver float64
+}
 
 type Card struct {
 	Suit int `json:"suit"`
@@ -31,55 +29,96 @@ type Card struct {
 }
 
 type User struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Cards []Card `json:"cards"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Cards      []Card `json:"cards"`
+	TakenCards []Card `json:"taken_cards"`
 }
 
 type UserResponse struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	CardLength int    `json:"card_length"`
+	Id               string `json:"id"`
+	Name             string `json:"name"`
+	CardLength       int    `json:"card_length"`
+	TakenCardsLength int    `json:"taken_cards_length"`
 }
 
 type TableCard struct {
-	BeatOff Card `json:"rank"`
 	Card
+	BeatOff *Card `json:"beat_off"`
 }
 
 type Game struct {
-	Redis       *redis.Client
-	Conf        *config.Config
-	Id          string      `json:"id"`
-	State       string      `json:"state"` // attacking defending
-	Users       []User      `json:"users"`
-	AttackingId string      `json:"attacking_id"`
-	DefendingId string      `json:"defending_id"`
-	Deck        []Card      `json:"deck"`
-	TableCards  []TableCard `json:"table_cards"`
+	Redis *redis.Client
+
+	Id              string        `json:"id"`
+	Settings        *GameSettings `json:"settings"`
+	Users           []*User       `json:"users"`
+	AttackingId     string        `json:"attacking_id"`
+	DefendingId     string        `json:"defending_id"`
+	Deck            []Card        `json:"deck"`
+	Trump           int           `json:"trump"` // suit
+	TableCards      []TableCard   `json:"table_cards"`
+	EndAttackUserId []string      `json:"end_attack_user_id"`
+	ReadyUsers      []string      `json:"ready_users"`
+	IsStarted       bool          `json:"is_Started"`
+
+	AttackTimerIsRunning bool      `json:"attack_timer_is_running"`
+	AttackTimerStartedAt time.Time `json:"attack_timer_started_at"`
+
+	DefendTimerIsRunning bool      `json:"defend_timer_is_running"`
+	DefendTimerStartedAt time.Time `json:"defend_timer_started_at"`
+
+	GameEventBuffer []GameEventContainer `json:"game_event_buffer"`
 }
 
-type GameStateResponse struct {
-	State       string         `json:"state"` // attacking defending
-	Me          User           `json:"me"`
-	Users       []UserResponse `json:"users"`
-	AttackingId string         `json:"attacking_id"`
-	DefendingId string         `json:"defending_id"`
-	DeckLength  int            `json:"deck_length"`
-	TableCards  []TableCard    `json:"table_cards"`
+func CreateNewGameAndSaveInRedis(redis *redis.Client, userIds []string) (*Game, error) {
+	game, err := CreateNewGame(userIds)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result, _ := json.Marshal(game)
+	log.Print(string(result))
+
+	ctx := context.Background()
+	// TODO: Change expiration time
+	status := redis.Set(ctx, "game:"+game.Id, string(result), 0)
+	if status.Err() != nil {
+		log.Fatal("Couldn't create game room: " + game.Id)
+	} else {
+		log.Print("Create game room: " + game.Id)
+	}
+
+	return game, nil
 }
 
-func CreateNewGame(redis *redis.Client, userIds []string) (*Game, error) {
+func SaveGame(game *Game, redis *redis.Client) {
+	result, _ := json.Marshal(game)
+	log.Print(string(result))
+
+	ctx := context.Background()
+	// TODO: Change expiration time
+	status := redis.Set(ctx, "game:"+game.Id, string(result), 0)
+	if status.Err() != nil {
+		log.Fatal("Couldn't save game room: " + game.Id)
+	} else {
+		log.Print("Save game room: " + game.Id)
+	}
+}
+
+func CreateNewGame(userIds []string) (*Game, error) {
 	id := uuid.New()
 	deck := generateDeck()
+
 	// TODO: The last cards will not be an ace.
 	shackeCards(deck)
-	users := make([]User, len(userIds))
+	users := make([]*User, len(userIds))
 	for i := 0; i < len(users); i++ {
 		userCards := deck[:6]
 		deck = deck[6:]
 
-		users[i] = User{
+		users[i] = &User{
 			Id:    userIds[i],
 			Name:  "",
 			Cards: userCards,
@@ -92,33 +131,20 @@ func CreateNewGame(redis *redis.Client, userIds []string) (*Game, error) {
 	defending, _ := nextUser(users, attacking_id)
 
 	game := Game{
-		Redis:       redis,
 		Id:          id.String(),
-		State:       "attacking",
+		Settings:    &DefaultGameSettings,
 		Users:       users,
 		AttackingId: attacking_id,
 		DefendingId: defending.Id,
 		Deck:        deck,
+		Trump:       deck[len(deck)-1].Suit,
 		TableCards:  make([]TableCard, 0),
-	}
-
-	result, _ := json.Marshal(game)
-	log.Print(string(result))
-
-	ctx := context.Background()
-	// TODO: Change expiration time
-	status := redis.Set(ctx, "game:"+id.String(), string(result), 0)
-	if status.Err() != nil {
-		log.Fatal("Couldn't create game room: " + id.String())
-	} else {
-		log.Print("Create game room: " + id.String())
 	}
 
 	return &game, nil
 }
 
 func LoadGame(redis *redis.Client, gameId string) (*Game, error) {
-	// TODO: implement
 	ctx := context.Background()
 	value, err := redis.Get(ctx, "game:"+gameId).Result()
 	if err != nil {
@@ -139,14 +165,125 @@ func LoadGame(redis *redis.Client, gameId string) (*Game, error) {
 	return &game, err
 }
 
-func (g *Game) HandleMessage(msg []byte) error {
-	var c Command
-	err := json.Unmarshal(msg, &c)
+func (g *Game) HandleMessage(msg []byte) (map[string][]byte, error) {
+	var command Command
+	err := json.Unmarshal(msg, &command)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := getUserById(g.Users, command.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var response CommandResponse
+
+	switch command.Action {
+	case ACTION_READY:
+		response = g.ReadyHandler(command, user)
+	case ACTION_ATTACK:
+		var attackCommand AttackCommand
+		json.Unmarshal(msg, &attackCommand)
+		response = g.AttackHandler(attackCommand, user)
+	case ACTION_DEFEND:
+		var defendCommand DefendCommand
+		json.Unmarshal(msg, &defendCommand)
+		response = g.DefendHandler(defendCommand, user)
+	case ACTION_END_ATTACK:
+		response = g.EndAttackHandler(command, user)
+	case ACTION_TAKE_ALL_CARDS:
+		response = g.TakeAllCardHandler(command, user)
+	default:
+		response = CommandResponse{
+			Error:     ERROR_UNREGISTERED_ACTION,
+			Command:   command,
+			GameState: gameToGameStateResponse(g, user),
+		}
+	}
+
+	responseByUser := make(map[string][]byte, 0)
+	responseString, _ := json.Marshal(response)
+	responseByUser[user.Id] = responseString
+
+	eventPackByUser := g.GenerateEventPack()
+	for userId, eventPack := range eventPackByUser {
+		eventString, _ := json.Marshal(eventPack)
+		responseByUser[userId] = eventString
+	}
+
+	return responseByUser, nil
+}
+
+func (g *Game) StartAttackTimer() {
+	g.AttackTimerIsRunning = true
+	g.AttackTimerStartedAt = time.Now()
+}
+
+func (g *Game) StartDefendTimer() {
+	g.DefendTimerIsRunning = true
+	g.DefendTimerStartedAt = time.Now()
+}
+
+func (g *Game) StopAttackTimer() {
+	g.AttackTimerIsRunning = false
+}
+
+func (g *Game) StopDefendTimer() {
+	g.DefendTimerIsRunning = false
+}
+
+func (g *Game) removeUserCard(userId string, suit int, rank int) error {
+	user, err := getUserById(g.Users, userId)
 	if err != nil {
 		return err
 	}
 
-	return err
+	for i := 0; i < len(user.Cards); i++ {
+		if user.Cards[i].Suit == suit && user.Cards[i].Rank == rank {
+			user.Cards = append(user.Cards[i+1:], user.Cards[:i]...)
+			return nil
+		}
+	}
+
+	return errors.New("User not found")
+}
+
+func (g *Game) beatOffCard(suit int, rank int, targetCard Card) bool {
+	for i := 0; i < len(g.TableCards); i++ {
+		if g.TableCards[i].Suit == targetCard.Suit && g.TableCards[i].Rank == targetCard.Rank {
+			if CardGreater(suit, rank, targetCard.Suit, targetCard.Rank, g.Trump) {
+				g.TableCards[i].BeatOff = &targetCard
+				return true
+			} else {
+				return false
+			}
+		}
+	}
+
+	return false
+}
+
+func (g *Game) GenerateEventPack() map[string]EventPack {
+	result := make(map[string]EventPack)
+	for _, user := range g.Users {
+		events := g.GameEventBuffer
+
+		eventPackEvents := make([]GameEventContainer, len(events))
+		for _, event := range events {
+			gameEvent := event.GetGameEvent()
+			gameEvent.State = gameToGameStateResponse(g, user)
+
+			eventPackEvents = append(eventPackEvents, event)
+		}
+		result[user.Id] = EventPack{
+			Events: eventPackEvents,
+		}
+	}
+
+	g.GameEventBuffer = []GameEventContainer{}
+
+	return result
 }
 
 func generateDeck() []Card {
@@ -172,7 +309,7 @@ func shackeCards(cards []Card) {
 	})
 }
 
-func nextUser(users []User, userId string) (User, error) {
+func nextUser(users []*User, userId string) (*User, error) {
 	length := len(users)
 	for i := 0; i < length; i++ {
 		if users[i].Id == userId {
@@ -184,5 +321,176 @@ func nextUser(users []User, userId string) (User, error) {
 		}
 	}
 
-	return User{}, errors.New("User not found")
+	return nil, errors.New("User not found")
+}
+
+func getUserById(users []*User, userId string) (*User, error) {
+	for i := 0; i < len(users); i++ {
+		if users[i].Id == userId {
+			return users[i], nil
+		}
+	}
+
+	return nil, errors.New("Not found")
+}
+
+func getCardBySuitAndRank(cards []Card, suit int, rank int) (Card, error) {
+	for i := 0; i < len(cards); i++ {
+		if cards[i].Suit == suit && cards[i].Rank == rank {
+			return cards[i], nil
+		}
+	}
+
+	return Card{}, errors.New("Not found")
+}
+
+func tableHasCardRank(tableCards []TableCard, rank int) bool {
+	for i := 0; i < len(tableCards); i++ {
+		if tableCards[i].Rank == rank {
+			return true
+		}
+
+		beatOffCard := tableCards[i].BeatOff
+		if beatOffCard != nil {
+			if beatOffCard.Rank == rank {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func tableHasCard(tableCards []TableCard, suit int, rank int) bool {
+	for i := 0; i < len(tableCards); i++ {
+		if tableCards[i].Suit == suit && tableCards[i].Rank == rank {
+			return true
+		}
+
+		beatOffCard := tableCards[i].BeatOff
+		if beatOffCard != nil {
+			if beatOffCard.Suit == suit && beatOffCard.Rank == rank {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func CardGreater(fsuit int, frank int, ssuit int, srank int, trump int) bool {
+	if fsuit == trump && ssuit != trump {
+		return true
+	} else if fsuit != trump && ssuit == trump {
+		return false
+	} else {
+		return frank > srank
+	}
+}
+
+func allCardBeatOff(cards []TableCard) bool {
+	for i := 0; i < len(cards); i++ {
+		if cards[i].BeatOff == nil {
+			return false
+		}
+	}
+	return true
+}
+
+func tableCardsToCards(tableCards []TableCard) []Card {
+	cards := []Card{}
+
+	for i := 0; i < len(tableCards); i++ {
+		cards = append(cards, Card{Suit: tableCards[i].Suit, Rank: tableCards[i].Rank})
+		if tableCards[i].BeatOff != nil {
+			cards = append(cards, *tableCards[i].BeatOff)
+		}
+	}
+
+	return cards
+}
+
+func contains[T comparable](slice []T, element T) bool {
+	for _, v := range slice {
+		if v == element {
+			return true
+		}
+	}
+	return false
+}
+
+func cardInfo(cards []Card) string {
+	result := ""
+	for _, card := range cards {
+		result += fmt.Sprintf("Card |suit:%d |rank:%d\n", card.Suit, card.Rank)
+	}
+	return result
+}
+
+func (g *Game) AddEventToBuffer(event GameEventContainer) {
+	g.GameEventBuffer = append(g.GameEventBuffer, event)
+}
+
+func (g *Game) EndAttack() {
+	newDefending, _ := nextUser(g.Users, g.DefendingId)
+
+	attacker, _ := getUserById(g.Users, g.AttackingId)
+	defender, _ := getUserById(g.Users, g.DefendingId)
+
+	otherUsers := []*User{}
+	copy(otherUsers, g.Users)
+	removeUser(otherUsers, attacker.Id, defender.Id)
+
+	g.AddCardsToUser(attacker)
+	for _, user := range otherUsers {
+		g.AddCardsToUser(user)
+	}
+	g.AddCardsToUser(defender)
+
+	g.AttackingId = g.DefendingId
+	g.DefendingId = newDefending.Id
+	g.TableCards = []TableCard{}
+	g.StopAttackTimer()
+	g.StopDefendTimer()
+	g.AddEventToBuffer(NewEndAttackEvent())
+}
+
+func (g *Game) AddCardsToUser(user *User) {
+	if len(user.Cards) >= 6 {
+		return
+	}
+
+	user.TakenCards = []Card{}
+
+	addCardAmount := 6 - len(user.Cards)
+	for range addCardAmount {
+		card, err := g.TakeCardFromDeck()
+		if err != nil {
+			break
+		}
+
+		user.Cards = append(user.Cards, card)
+		user.TakenCards = append(user.TakenCards, card)
+	}
+}
+
+func (g *Game) TakeCardFromDeck() (Card, error) {
+	if len(g.Deck) <= 0 {
+		return Card{}, errors.New("Deck is empty")
+	}
+
+	card := g.Deck[0]
+	g.Deck = g.Deck[1:]
+
+	return card, nil
+}
+
+func removeUser(users []*User, userIds ...string) {
+	for i, user := range users {
+		for _, removeUser := range userIds {
+			if user.Id == removeUser {
+				users = append(users[:i], users[i+1:]...)
+			}
+		}
+	}
 }
