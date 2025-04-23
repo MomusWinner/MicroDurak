@@ -5,12 +5,59 @@
 package database
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type GameResult string
+
+const (
+	GameResultWin        GameResult = "win"
+	GameResultDraw       GameResult = "draw"
+	GameResultInterruped GameResult = "interruped"
+)
+
+func (e *GameResult) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = GameResult(s)
+	case string:
+		*e = GameResult(s)
+	default:
+		return fmt.Errorf("unsupported scan type for GameResult: %T", src)
+	}
+	return nil
+}
+
+type NullGameResult struct {
+	GameResult GameResult
+	Valid      bool // Valid is true if GameResult is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullGameResult) Scan(value interface{}) error {
+	if value == nil {
+		ns.GameResult, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.GameResult.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullGameResult) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.GameResult), nil
+}
 
 type MatchResult struct {
 	ID          pgtype.UUID
 	PlayerCount int16
+	GameResult  GameResult
 }
 
 type Player struct {
