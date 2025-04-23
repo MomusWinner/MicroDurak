@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package="./;game";
+
+service Game {
+  rpc CreateGame(CreateGameRequest) returns (CreateGameResponse) {}
+}
+
+message CreateGameRequest {
+  repeated string user_ids = 1;
+}
+
+message CreateGameResponse {
+  string game_id = 1;
+}

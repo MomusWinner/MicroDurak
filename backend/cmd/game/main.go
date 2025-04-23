@@ -1,15 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
+	pb "github.com/MommusWinner/MicroDurak/internal/game/v1"
 	"github.com/MommusWinner/MicroDurak/services/game/config"
 	"github.com/MommusWinner/MicroDurak/services/game/controller"
+	gameGrpc "github.com/MommusWinner/MicroDurak/services/game/grpc"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
 )
 
-func run() error {
+func run(grpcServer *grpc.Server) error {
 	conf, err := config.Load()
 	if err != nil {
 		return err
@@ -27,17 +35,42 @@ func run() error {
 		return err
 	}
 
-	gameController := controller.NewGameController(conf, channel, client)
-	gameController.CreateGame([]string{
-		"test5",
-		"test7",
-	})
+	errChan := make(chan error, 2)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	gameController := controller.NewGameController(conf, channel, client)
+	pb.RegisterGameServer(grpcServer, gameGrpc.NewGameServer(&gameController, conf))
+
+	go func() {
+		errChan <- startGrpc(grpcServer, conf)
+	}()
 
 	go gameController.ProcessQueues()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-quit:
+		log.Println("\nShutting down servers...")
+
+		grpcServer.GracefulStop()
+		fmt.Println("Servers stopped successfully")
+		return nil
+	}
+}
+
+func startGrpc(grpcServer *grpc.Server, conf *config.Config) error {
+	log.Printf("Starting gRPC server on :%s\n", conf.GRPCPort)
+	lis, err := net.Listen("tcp", ":"+conf.GRPCPort)
+	if err != nil {
+		return fmt.Errorf("gRPC listen error: %w", err)
+	}
+
+	if err := grpcServer.Serve(lis); err != nil {
+		return fmt.Errorf("gRPC server error: %w", err)
+	}
 	return nil
 }
 
@@ -55,9 +88,9 @@ func connectToRabbit(conf *config.Config) (*amqp.Channel, error) {
 }
 
 func main() {
-	var forever chan struct{}
-	if err := run(); err != nil {
+	grpcServer := grpc.NewServer()
+
+	if err := run(grpcServer); err != nil {
 		panic(err)
 	}
-	<-forever
 }
