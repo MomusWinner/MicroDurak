@@ -21,8 +21,11 @@ type Handler struct {
 }
 
 type AuthResponse struct {
-	Token string `json:"token"`
+	PlayerID string `json:"player_id"`
+	Token    string `json:"token"`
 }
+
+var internalServerError = echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
 
 func (h *Handler) Register(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -45,10 +48,10 @@ func (h *Handler) Register(c echo.Context) error {
 	isEmailTaken, err := h.DBQueries.CheckEmail(ctx, r.Email)
 	if err != nil {
 		c.Logger().Error(err)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return internalServerError
 	}
 	if isEmailTaken > 0 {
-		return c.String(http.StatusBadRequest, "Email Taken")
+		return c.String(http.StatusConflict, "Email Taken")
 	}
 
 	rep, err := h.PlayersClient.CreatePlayer(ctx, &players.CreatePlayerRequest{
@@ -57,34 +60,35 @@ func (h *Handler) Register(c echo.Context) error {
 	})
 	if err != nil {
 		c.Logger().Error(err)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return internalServerError
 	}
 
 	hashedPassword, err := utils.HashPassword(r.Password)
 	if err != nil {
 		c.Logger().Error(err)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return internalServerError
 	}
 
 	playerId, err := uuid.Parse(rep.Id)
-	authId, err := h.DBQueries.CreateAuth(ctx, database.CreateAuthParams{
+	_, err = h.DBQueries.CreateAuth(ctx, database.CreateAuthParams{
 		PlayerID: pgtype.UUID{Valid: true, Bytes: playerId},
 		Email:    r.Email,
 		Password: hashedPassword,
 	})
 	if err != nil {
 		c.Logger().Error(err)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return internalServerError
 	}
 
-	jwt, err := utils.GenerateToken(h.Config.JWTPrivate, authId.String())
+	jwt, err := utils.GenerateToken(h.Config.JWTPrivate, playerId.String())
 	if err != nil {
 		c.Logger().Error(err)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return internalServerError
 	}
 
-	return c.JSON(http.StatusCreated, AuthResponse{
-		Token: jwt,
+	return c.JSON(http.StatusOK, AuthResponse{
+		PlayerID: playerId.String(),
+		Token:    jwt,
 	})
 }
 
@@ -100,26 +104,25 @@ func (h *Handler) Login(c echo.Context) error {
 	}
 
 	playerAuth, err := h.DBQueries.GetAuthByEmail(c.Request().Context(), r.Email)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return c.String(http.StatusForbidden, "Login failed")
-		} else {
-			c.Logger().Error(err)
-			return c.String(http.StatusInternalServerError, "Internal Server Error")
-		}
+	if errors.Is(err, sql.ErrNoRows) {
+		return c.String(http.StatusForbidden, "Login failed")
+	} else if err != nil {
+		c.Logger().Error(err)
+		return internalServerError
 	}
 
 	if !utils.CheckPasswordHash(r.Password, playerAuth.Password) {
 		return c.String(http.StatusForbidden, "Login failed")
 	}
 
-	jwt, err := utils.GenerateToken(h.Config.JWTPrivate, playerAuth.ID.String())
+	jwt, err := utils.GenerateToken(h.Config.JWTPrivate, playerAuth.PlayerID.String())
 	if err != nil {
 		c.Logger().Error(err)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return internalServerError
 	}
 
 	return c.JSON(http.StatusOK, AuthResponse{
-		Token: jwt,
+		PlayerID: playerAuth.PlayerID.String(),
+		Token:    jwt,
 	})
 }

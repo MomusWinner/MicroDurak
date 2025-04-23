@@ -46,6 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile.service
       args:
+        PORT: 8080
         SERVICE_NAME: auth
     ports:
       - 127.0.0.1:8080:8080
@@ -58,6 +59,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      players:
+        condition: service_started
 
   players:
     build:
