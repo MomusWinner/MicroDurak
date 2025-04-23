@@ -28,5 +28,5 @@ func (gs *GameServer) CreateGame(
 	}
 
 	resp := &game.CreateGameResponse{GameId: createdGame.Id}
-	return resp, err
+	return resp, nil
 }
