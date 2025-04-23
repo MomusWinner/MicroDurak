@@ -21,7 +21,8 @@ type Handler struct {
 }
 
 type AuthResponse struct {
-	Token string `json:"token"`
+	PlayerID string `json:"player_id"`
+	Token    string `json:"token"`
 }
 
 var internalServerError = echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
@@ -85,8 +86,9 @@ func (h *Handler) Register(c echo.Context) error {
 		return internalServerError
 	}
 
-	return c.JSON(http.StatusCreated, AuthResponse{
-		Token: jwt,
+	return c.JSON(http.StatusOK, AuthResponse{
+		PlayerID: playerId.String(),
+		Token:    jwt,
 	})
 }
 
@@ -120,6 +122,7 @@ func (h *Handler) Login(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, AuthResponse{
-		Token: jwt,
+		PlayerID: playerAuth.PlayerID.String(),
+		Token:    jwt,
 	})
 }
