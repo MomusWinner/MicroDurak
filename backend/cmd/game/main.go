@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/MommusWinner/MicroDurak/services/game/config"
-	"github.com/MommusWinner/MicroDurak/services/game/core"
+	"github.com/MommusWinner/MicroDurak/services/game/controller"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 )
@@ -21,24 +21,23 @@ func run() error {
 	}
 
 	client := redis.NewClient(opt)
-	// game, err := core.CreateNewGame(client, []string{
-	// 	"test1",
-	// 	"test2",
-	// })
-	//
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// _ = game
+	channel, err := connectToRabbit(conf)
 
-	roomId := "7fa88043-5d53-414d-9849-de0e49f5996b"
-	game, err := core.LoadGame(client, roomId)
+	if err != nil {
+		return err
+	}
+
+	gameController := controller.NewGameController(conf, channel, client)
+	gameController.CreateGame([]string{
+		"test5",
+		"test7",
+	})
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = game
 
+	go gameController.ProcessQueues()
 	return nil
 }
 
