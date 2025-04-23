@@ -52,3 +52,49 @@ func (h Handler) Connect(c echo.Context) error {
 		fmt.Printf("%s\n", msg)
 	}
 }
+
+func (h Handler) processQueue(userId string, processMessage func([]byte)) {
+	queue_name := "game-manager-" + userId
+	exchange_name := "game-manager-ex"
+
+	_, err := h.Channel.QueueDeclare(
+		queue_name, // name
+		false,      // durable
+		false,      // delete when unused
+		false,      // exclusive
+		false,      // no-wait
+		nil,        // arguments
+	)
+	if err != nil {
+		log.Printf("Declare err: %v", err)
+		panic(err)
+	}
+	err = h.Channel.ExchangeDeclare(
+		exchange_name, // name
+		"direct",      // type
+		true,          // durable
+		false,         // auto-deleted
+		false,         // internal
+		false,         // no-wait
+		nil,           // arguments
+	)
+	if err != nil {
+		log.Printf("Exchange err: %v", err)
+		panic(err)
+	}
+	msgs, _ := h.Channel.Consume(
+		queue_name, // queue
+		"",         // consumer
+		true,       // auto-ack
+		false,      // exclusive
+		false,      // no-local
+		false,      // no-wait
+		nil,        // args
+	)
+
+	func() {
+		for d := range msgs {
+			processMessage(d.Body)
+		}
+	}()
+}
