@@ -46,6 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile.service
       args:
+        PORT: 8080
         SERVICE_NAME: auth
     ports:
       - 127.0.0.1:8080:8080
