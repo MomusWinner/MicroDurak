@@ -58,6 +58,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      players:
+        condition: service_started
 
   players:
     build:
