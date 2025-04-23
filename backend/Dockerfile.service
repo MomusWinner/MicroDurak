@@ -4,8 +4,9 @@ ARG SERVICE_NAME
 
 WORKDIR /micro-durak/$SERVICE_NAME
 
-COPY ./cmd ./cmd
-COPY ./services ./services
+COPY ./cmd/$SERVICE_NAME ./cmd/$SERVICE_NAME
+COPY ./services/$SERVICE_NAME ./services/$SERVICE_NAME
+COPY ./vendor ./vendor
 COPY ./lib ./lib
 COPY ./internal ./internal
 COPY ./go.mod ./go.sum ./
@@ -15,6 +16,7 @@ RUN go build -o app ./cmd/$SERVICE_NAME/main.go
 #final stage
 FROM alpine:3.21
 ARG SERVICE_NAME
+ARG PORT
 
 WORKDIR /root/
 
@@ -22,4 +24,4 @@ COPY --from=builder /micro-durak/$SERVICE_NAME/app ./
 
 CMD ["./app"]
 
-EXPOSE 8080
+EXPOSE $PORT
