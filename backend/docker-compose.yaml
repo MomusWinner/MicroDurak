@@ -11,7 +11,7 @@ services:
     environment:
       RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@${RABBIT_HOST}:${RABBIT_PORT}/"
       REDIS_URL: "redis://:${REDIS_PASS}@redis:6379/0"
-      JWT_PRIVATE: ${JWT_PRIVATE}
+      JWT_PUBLIC: ${JWT_PUBLIC}
       PLAYERS_URL: "players:9090"
     depends_on:
       rabbitmq:
@@ -31,7 +31,7 @@ services:
       - 127.0.0.1:7070:7070
     environment:
       RABBITMQ_URL: "amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@${RABBIT_HOST}:${RABBIT_PORT}/"
-      JWT_PRIVATE: ${JWT_PRIVATE}
+      JWT_PUBLIC: ${JWT_PUBLIC}
       PLAYERS_URL: "players:9090"
     depends_on:
       rabbitmq:
