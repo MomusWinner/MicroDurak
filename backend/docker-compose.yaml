@@ -64,8 +64,10 @@ services:
       context: .
       dockerfile: Dockerfile.service
       args:
+        PORT: 9090
         SERVICE_NAME: players
     environment:
+      GRPC_PORT: "9090"
       JWT_PUBLIC: ${JWT_PUBLIC}
       DATABASE_URL: "user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} host=database sslmode=disable"
     depends_on:

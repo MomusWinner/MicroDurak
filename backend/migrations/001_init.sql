@@ -15,9 +15,12 @@ create table player_auth (
   password varchar(300) not null
 );
 
+CREATE TYPE game_result AS ENUM ('win', 'draw', 'interruped');
+
 create table match_result (
     id uuid primary key default uuid_generate_v4(),
-    player_count smallint not null
+    player_count smallint not null,
+	game_result game_result not null
 );
 
 create table player_placement (
