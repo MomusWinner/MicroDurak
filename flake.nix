@@ -48,6 +48,8 @@
 
           # generate rsa priv/pub keys for jwt
           openssl
+
+          cloc
         ];
       };
     });
