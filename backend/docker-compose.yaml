@@ -1,5 +1,4 @@
 services:
-
   game:
     build:
       context: .
@@ -78,10 +77,30 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    
+  matchmaker:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: matchmaker
+    ports:
+      - 127.0.0.1:3000:8080
+    environment:
+      JWT_PUBLIC: ${JWT_PUBLIC}
+      PLAYERS_URL: "players:9090"
+      REDIS_URL: "redis://:${REDIS_PASS}@redis:6379/0"
+    depends_on:
+      redis:
+        condition: service_healthy
+      players:
+        condition: service_started
 
   redis:
    image: redis:7.4-alpine3.21
    restart: unless-stopped
+   ports:
+     - 127.0.0.1:6379:6379
    environment:
      REDIS_PASSWORD: ${REDIS_PASS}
    healthcheck:
