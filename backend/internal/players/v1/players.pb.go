@@ -21,7 +21,56 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type PlayerService struct {
+type GameResult int32
+
+const (
+	GameResult_WIN         GameResult = 0
+	GameResult_DRAW        GameResult = 1
+	GameResult_INTERRUPTED GameResult = 2
+)
+
+// Enum value maps for GameResult.
+var (
+	GameResult_name = map[int32]string{
+		0: "WIN",
+		1: "DRAW",
+		2: "INTERRUPTED",
+	}
+	GameResult_value = map[string]int32{
+		"WIN":         0,
+		"DRAW":        1,
+		"INTERRUPTED": 2,
+	}
+)
+
+func (x GameResult) Enum() *GameResult {
+	p := new(GameResult)
+	*p = x
+	return p
+}
+
+func (x GameResult) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GameResult) Descriptor() protoreflect.EnumDescriptor {
+	return file_players_v1_players_proto_enumTypes[0].Descriptor()
+}
+
+func (GameResult) Type() protoreflect.EnumType {
+	return &file_players_v1_players_proto_enumTypes[0]
+}
+
+func (x GameResult) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GameResult.Descriptor instead.
+func (GameResult) EnumDescriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{0}
+}
+
+type Player struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -31,20 +80,20 @@ type PlayerService struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *PlayerService) Reset() {
-	*x = PlayerService{}
+func (x *Player) Reset() {
+	*x = Player{}
 	mi := &file_players_v1_players_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *PlayerService) String() string {
+func (x *Player) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PlayerService) ProtoMessage() {}
+func (*Player) ProtoMessage() {}
 
-func (x *PlayerService) ProtoReflect() protoreflect.Message {
+func (x *Player) ProtoReflect() protoreflect.Message {
 	mi := &file_players_v1_players_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -56,37 +105,149 @@ func (x *PlayerService) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PlayerService.ProtoReflect.Descriptor instead.
-func (*PlayerService) Descriptor() ([]byte, []int) {
+// Deprecated: Use Player.ProtoReflect.Descriptor instead.
+func (*Player) Descriptor() ([]byte, []int) {
 	return file_players_v1_players_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *PlayerService) GetId() string {
+func (x *Player) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *PlayerService) GetName() string {
+func (x *Player) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *PlayerService) GetAge() int32 {
+func (x *Player) GetAge() int32 {
 	if x != nil {
 		return x.Age
 	}
 	return 0
 }
 
-func (x *PlayerService) GetRating() int32 {
+func (x *Player) GetRating() int32 {
 	if x != nil {
 		return x.Rating
 	}
 	return 0
+}
+
+type PlayerPlacement struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MatchResultId string                 `protobuf:"bytes,1,opt,name=match_result_id,json=matchResultId,proto3" json:"match_result_id,omitempty"`
+	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	PlayerPlace   int32                  `protobuf:"varint,3,opt,name=player_place,json=playerPlace,proto3" json:"player_place,omitempty"`
+	RankChange    int32                  `protobuf:"varint,4,opt,name=rank_change,json=rankChange,proto3" json:"rank_change,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlayerPlacement) Reset() {
+	*x = PlayerPlacement{}
+	mi := &file_players_v1_players_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlayerPlacement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerPlacement) ProtoMessage() {}
+
+func (x *PlayerPlacement) ProtoReflect() protoreflect.Message {
+	mi := &file_players_v1_players_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerPlacement.ProtoReflect.Descriptor instead.
+func (*PlayerPlacement) Descriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *PlayerPlacement) GetMatchResultId() string {
+	if x != nil {
+		return x.MatchResultId
+	}
+	return ""
+}
+
+func (x *PlayerPlacement) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *PlayerPlacement) GetPlayerPlace() int32 {
+	if x != nil {
+		return x.PlayerPlace
+	}
+	return 0
+}
+
+func (x *PlayerPlacement) GetRankChange() int32 {
+	if x != nil {
+		return x.RankChange
+	}
+	return 0
+}
+
+type GetPlayerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPlayerRequest) Reset() {
+	*x = GetPlayerRequest{}
+	mi := &file_players_v1_players_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPlayerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPlayerRequest) ProtoMessage() {}
+
+func (x *GetPlayerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_players_v1_players_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPlayerRequest.ProtoReflect.Descriptor instead.
+func (*GetPlayerRequest) Descriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetPlayerRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 type CreatePlayerRequest struct {
@@ -99,7 +260,7 @@ type CreatePlayerRequest struct {
 
 func (x *CreatePlayerRequest) Reset() {
 	*x = CreatePlayerRequest{}
-	mi := &file_players_v1_players_proto_msgTypes[1]
+	mi := &file_players_v1_players_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -111,7 +272,7 @@ func (x *CreatePlayerRequest) String() string {
 func (*CreatePlayerRequest) ProtoMessage() {}
 
 func (x *CreatePlayerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_players_v1_players_proto_msgTypes[1]
+	mi := &file_players_v1_players_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -124,7 +285,7 @@ func (x *CreatePlayerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlayerRequest.ProtoReflect.Descriptor instead.
 func (*CreatePlayerRequest) Descriptor() ([]byte, []int) {
-	return file_players_v1_players_proto_rawDescGZIP(), []int{1}
+	return file_players_v1_players_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreatePlayerRequest) GetName() string {
@@ -150,7 +311,7 @@ type CreatePlayerReply struct {
 
 func (x *CreatePlayerReply) Reset() {
 	*x = CreatePlayerReply{}
-	mi := &file_players_v1_players_proto_msgTypes[2]
+	mi := &file_players_v1_players_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -162,7 +323,7 @@ func (x *CreatePlayerReply) String() string {
 func (*CreatePlayerReply) ProtoMessage() {}
 
 func (x *CreatePlayerReply) ProtoReflect() protoreflect.Message {
-	mi := &file_players_v1_players_proto_msgTypes[2]
+	mi := &file_players_v1_players_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +336,7 @@ func (x *CreatePlayerReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlayerReply.ProtoReflect.Descriptor instead.
 func (*CreatePlayerReply) Descriptor() ([]byte, []int) {
-	return file_players_v1_players_proto_rawDescGZIP(), []int{2}
+	return file_players_v1_players_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreatePlayerReply) GetId() string {
@@ -185,23 +346,269 @@ func (x *CreatePlayerReply) GetId() string {
 	return ""
 }
 
+type CreateMatchResultRequest struct {
+	state            protoimpl.MessageState    `protogen:"open.v1"`
+	GameResult       GameResult                `protobuf:"varint,1,opt,name=game_result,json=gameResult,proto3,enum=GameResult" json:"game_result,omitempty"`
+	PlayerPlacements []*PlayerPlacementRequest `protobuf:"bytes,2,rep,name=player_placements,json=playerPlacements,proto3" json:"player_placements,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *CreateMatchResultRequest) Reset() {
+	*x = CreateMatchResultRequest{}
+	mi := &file_players_v1_players_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateMatchResultRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateMatchResultRequest) ProtoMessage() {}
+
+func (x *CreateMatchResultRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_players_v1_players_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateMatchResultRequest.ProtoReflect.Descriptor instead.
+func (*CreateMatchResultRequest) Descriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateMatchResultRequest) GetGameResult() GameResult {
+	if x != nil {
+		return x.GameResult
+	}
+	return GameResult_WIN
+}
+
+func (x *CreateMatchResultRequest) GetPlayerPlacements() []*PlayerPlacementRequest {
+	if x != nil {
+		return x.PlayerPlacements
+	}
+	return nil
+}
+
+type CreateMatchResultResponse struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	MatchResultId string                     `protobuf:"bytes,1,opt,name=match_result_id,json=matchResultId,proto3" json:"match_result_id,omitempty"`
+	PlayerRanks   []*PlayerPlacementResponse `protobuf:"bytes,2,rep,name=player_ranks,json=playerRanks,proto3" json:"player_ranks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateMatchResultResponse) Reset() {
+	*x = CreateMatchResultResponse{}
+	mi := &file_players_v1_players_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateMatchResultResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateMatchResultResponse) ProtoMessage() {}
+
+func (x *CreateMatchResultResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_players_v1_players_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateMatchResultResponse.ProtoReflect.Descriptor instead.
+func (*CreateMatchResultResponse) Descriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CreateMatchResultResponse) GetMatchResultId() string {
+	if x != nil {
+		return x.MatchResultId
+	}
+	return ""
+}
+
+func (x *CreateMatchResultResponse) GetPlayerRanks() []*PlayerPlacementResponse {
+	if x != nil {
+		return x.PlayerRanks
+	}
+	return nil
+}
+
+type PlayerPlacementRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	PlayerPlace   int32                  `protobuf:"varint,2,opt,name=player_place,json=playerPlace,proto3" json:"player_place,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlayerPlacementRequest) Reset() {
+	*x = PlayerPlacementRequest{}
+	mi := &file_players_v1_players_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlayerPlacementRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerPlacementRequest) ProtoMessage() {}
+
+func (x *PlayerPlacementRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_players_v1_players_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerPlacementRequest.ProtoReflect.Descriptor instead.
+func (*PlayerPlacementRequest) Descriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *PlayerPlacementRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *PlayerPlacementRequest) GetPlayerPlace() int32 {
+	if x != nil {
+		return x.PlayerPlace
+	}
+	return 0
+}
+
+type PlayerPlacementResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId         string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	PlayerRank       int32                  `protobuf:"varint,2,opt,name=player_rank,json=playerRank,proto3" json:"player_rank,omitempty"`
+	PlayerRankChange int32                  `protobuf:"varint,3,opt,name=player_rank_change,json=playerRankChange,proto3" json:"player_rank_change,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *PlayerPlacementResponse) Reset() {
+	*x = PlayerPlacementResponse{}
+	mi := &file_players_v1_players_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlayerPlacementResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerPlacementResponse) ProtoMessage() {}
+
+func (x *PlayerPlacementResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_players_v1_players_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerPlacementResponse.ProtoReflect.Descriptor instead.
+func (*PlayerPlacementResponse) Descriptor() ([]byte, []int) {
+	return file_players_v1_players_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PlayerPlacementResponse) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *PlayerPlacementResponse) GetPlayerRank() int32 {
+	if x != nil {
+		return x.PlayerRank
+	}
+	return 0
+}
+
+func (x *PlayerPlacementResponse) GetPlayerRankChange() int32 {
+	if x != nil {
+		return x.PlayerRankChange
+	}
+	return 0
+}
+
 var File_players_v1_players_proto protoreflect.FileDescriptor
 
 const file_players_v1_players_proto_rawDesc = "" +
 	"\n" +
-	"\x18players/v1/players.proto\"]\n" +
-	"\rPlayerService\x12\x0e\n" +
+	"\x18players/v1/players.proto\"V\n" +
+	"\x06Player\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x10\n" +
 	"\x03age\x18\x03 \x01(\x05R\x03age\x12\x16\n" +
-	"\x06rating\x18\x04 \x01(\x05R\x06rating\";\n" +
+	"\x06rating\x18\x04 \x01(\x05R\x06rating\"\x9a\x01\n" +
+	"\x0fPlayerPlacement\x12&\n" +
+	"\x0fmatch_result_id\x18\x01 \x01(\tR\rmatchResultId\x12\x1b\n" +
+	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12!\n" +
+	"\fplayer_place\x18\x03 \x01(\x05R\vplayerPlace\x12\x1f\n" +
+	"\vrank_change\x18\x04 \x01(\x05R\n" +
+	"rankChange\"\"\n" +
+	"\x10GetPlayerRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\";\n" +
 	"\x13CreatePlayerRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
 	"\x03age\x18\x02 \x01(\x05R\x03age\"#\n" +
 	"\x11CreatePlayerReply\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2E\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x8e\x01\n" +
+	"\x18CreateMatchResultRequest\x12,\n" +
+	"\vgame_result\x18\x01 \x01(\x0e2\v.GameResultR\n" +
+	"gameResult\x12D\n" +
+	"\x11player_placements\x18\x02 \x03(\v2\x17.PlayerPlacementRequestR\x10playerPlacements\"\x80\x01\n" +
+	"\x19CreateMatchResultResponse\x12&\n" +
+	"\x0fmatch_result_id\x18\x01 \x01(\tR\rmatchResultId\x12;\n" +
+	"\fplayer_ranks\x18\x02 \x03(\v2\x18.PlayerPlacementResponseR\vplayerRanks\"X\n" +
+	"\x16PlayerPlacementRequest\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12!\n" +
+	"\fplayer_place\x18\x02 \x01(\x05R\vplayerPlace\"\x85\x01\n" +
+	"\x17PlayerPlacementResponse\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x1f\n" +
+	"\vplayer_rank\x18\x02 \x01(\x05R\n" +
+	"playerRank\x12,\n" +
+	"\x12player_rank_change\x18\x03 \x01(\x05R\x10playerRankChange*0\n" +
+	"\n" +
+	"GameResult\x12\a\n" +
+	"\x03WIN\x10\x00\x12\b\n" +
+	"\x04DRAW\x10\x01\x12\x0f\n" +
+	"\vINTERRUPTED\x10\x022\xbe\x01\n" +
 	"\aPlayers\x12:\n" +
-	"\fCreatePlayer\x12\x14.CreatePlayerRequest\x1a\x12.CreatePlayerReply\"\x00B\fZ\n" +
+	"\fCreatePlayer\x12\x14.CreatePlayerRequest\x1a\x12.CreatePlayerReply\"\x00\x12)\n" +
+	"\tGetPlayer\x12\x11.GetPlayerRequest\x1a\a.Player\"\x00\x12L\n" +
+	"\x11CreateMatchResult\x12\x19.CreateMatchResultRequest\x1a\x1a.CreateMatchResultResponse\"\x00B\fZ\n" +
 	"./;playersb\x06proto3"
 
 var (
@@ -216,20 +623,35 @@ func file_players_v1_players_proto_rawDescGZIP() []byte {
 	return file_players_v1_players_proto_rawDescData
 }
 
-var file_players_v1_players_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_players_v1_players_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_players_v1_players_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_players_v1_players_proto_goTypes = []any{
-	(*PlayerService)(nil),       // 0: PlayerService
-	(*CreatePlayerRequest)(nil), // 1: CreatePlayerRequest
-	(*CreatePlayerReply)(nil),   // 2: CreatePlayerReply
+	(GameResult)(0),                   // 0: GameResult
+	(*Player)(nil),                    // 1: Player
+	(*PlayerPlacement)(nil),           // 2: PlayerPlacement
+	(*GetPlayerRequest)(nil),          // 3: GetPlayerRequest
+	(*CreatePlayerRequest)(nil),       // 4: CreatePlayerRequest
+	(*CreatePlayerReply)(nil),         // 5: CreatePlayerReply
+	(*CreateMatchResultRequest)(nil),  // 6: CreateMatchResultRequest
+	(*CreateMatchResultResponse)(nil), // 7: CreateMatchResultResponse
+	(*PlayerPlacementRequest)(nil),    // 8: PlayerPlacementRequest
+	(*PlayerPlacementResponse)(nil),   // 9: PlayerPlacementResponse
 }
 var file_players_v1_players_proto_depIdxs = []int32{
-	1, // 0: Players.CreatePlayer:input_type -> CreatePlayerRequest
-	2, // 1: Players.CreatePlayer:output_type -> CreatePlayerReply
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: CreateMatchResultRequest.game_result:type_name -> GameResult
+	8, // 1: CreateMatchResultRequest.player_placements:type_name -> PlayerPlacementRequest
+	9, // 2: CreateMatchResultResponse.player_ranks:type_name -> PlayerPlacementResponse
+	4, // 3: Players.CreatePlayer:input_type -> CreatePlayerRequest
+	3, // 4: Players.GetPlayer:input_type -> GetPlayerRequest
+	6, // 5: Players.CreateMatchResult:input_type -> CreateMatchResultRequest
+	5, // 6: Players.CreatePlayer:output_type -> CreatePlayerReply
+	1, // 7: Players.GetPlayer:output_type -> Player
+	7, // 8: Players.CreateMatchResult:output_type -> CreateMatchResultResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_players_v1_players_proto_init() }
@@ -242,13 +664,14 @@ func file_players_v1_players_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_players_v1_players_proto_rawDesc), len(file_players_v1_players_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   3,
+			NumEnums:      1,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_players_v1_players_proto_goTypes,
 		DependencyIndexes: file_players_v1_players_proto_depIdxs,
+		EnumInfos:         file_players_v1_players_proto_enumTypes,
 		MessageInfos:      file_players_v1_players_proto_msgTypes,
 	}.Build()
 	File_players_v1_players_proto = out.File

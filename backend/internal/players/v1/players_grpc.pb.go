@@ -19,7 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Players_CreatePlayer_FullMethodName = "/Players/CreatePlayer"
+	Players_CreatePlayer_FullMethodName      = "/Players/CreatePlayer"
+	Players_GetPlayer_FullMethodName         = "/Players/GetPlayer"
+	Players_CreateMatchResult_FullMethodName = "/Players/CreateMatchResult"
 )
 
 // PlayersClient is the client API for Players service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PlayersClient interface {
 	CreatePlayer(ctx context.Context, in *CreatePlayerRequest, opts ...grpc.CallOption) (*CreatePlayerReply, error)
+	GetPlayer(ctx context.Context, in *GetPlayerRequest, opts ...grpc.CallOption) (*Player, error)
+	CreateMatchResult(ctx context.Context, in *CreateMatchResultRequest, opts ...grpc.CallOption) (*CreateMatchResultResponse, error)
 }
 
 type playersClient struct {
@@ -47,11 +51,33 @@ func (c *playersClient) CreatePlayer(ctx context.Context, in *CreatePlayerReques
 	return out, nil
 }
 
+func (c *playersClient) GetPlayer(ctx context.Context, in *GetPlayerRequest, opts ...grpc.CallOption) (*Player, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Player)
+	err := c.cc.Invoke(ctx, Players_GetPlayer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *playersClient) CreateMatchResult(ctx context.Context, in *CreateMatchResultRequest, opts ...grpc.CallOption) (*CreateMatchResultResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateMatchResultResponse)
+	err := c.cc.Invoke(ctx, Players_CreateMatchResult_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PlayersServer is the server API for Players service.
 // All implementations must embed UnimplementedPlayersServer
 // for forward compatibility.
 type PlayersServer interface {
 	CreatePlayer(context.Context, *CreatePlayerRequest) (*CreatePlayerReply, error)
+	GetPlayer(context.Context, *GetPlayerRequest) (*Player, error)
+	CreateMatchResult(context.Context, *CreateMatchResultRequest) (*CreateMatchResultResponse, error)
 	mustEmbedUnimplementedPlayersServer()
 }
 
@@ -64,6 +90,12 @@ type UnimplementedPlayersServer struct{}
 
 func (UnimplementedPlayersServer) CreatePlayer(context.Context, *CreatePlayerRequest) (*CreatePlayerReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePlayer not implemented")
+}
+func (UnimplementedPlayersServer) GetPlayer(context.Context, *GetPlayerRequest) (*Player, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPlayer not implemented")
+}
+func (UnimplementedPlayersServer) CreateMatchResult(context.Context, *CreateMatchResultRequest) (*CreateMatchResultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMatchResult not implemented")
 }
 func (UnimplementedPlayersServer) mustEmbedUnimplementedPlayersServer() {}
 func (UnimplementedPlayersServer) testEmbeddedByValue()                 {}
@@ -104,6 +136,42 @@ func _Players_CreatePlayer_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Players_GetPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPlayerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlayersServer).GetPlayer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Players_GetPlayer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlayersServer).GetPlayer(ctx, req.(*GetPlayerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Players_CreateMatchResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateMatchResultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlayersServer).CreateMatchResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Players_CreateMatchResult_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlayersServer).CreateMatchResult(ctx, req.(*CreateMatchResultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Players_ServiceDesc is the grpc.ServiceDesc for Players service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +182,14 @@ var Players_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreatePlayer",
 			Handler:    _Players_CreatePlayer_Handler,
+		},
+		{
+			MethodName: "GetPlayer",
+			Handler:    _Players_GetPlayer_Handler,
+		},
+		{
+			MethodName: "CreateMatchResult",
+			Handler:    _Players_CreateMatchResult_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

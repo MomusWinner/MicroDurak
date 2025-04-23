@@ -4,13 +4,26 @@ option go_package="./;players";
 
 service Players {
   rpc CreatePlayer (CreatePlayerRequest) returns (CreatePlayerReply) {}
+  rpc GetPlayer (GetPlayerRequest) returns (Player) {}
+  rpc CreateMatchResult (CreateMatchResultRequest) returns (CreateMatchResultResponse) {}
 }
 
-message PlayerService {
+message Player {
   string id = 1;
   string name = 2;
   int32 age = 3;
   int32 rating = 4;
+}
+
+message PlayerPlacement {
+  	string match_result_id = 1;
+	string player_id = 2;
+	int32 player_place = 3;
+	int32 rank_change = 4;
+}
+
+message GetPlayerRequest {
+  string id = 1;
 }
 
 message CreatePlayerRequest {
@@ -20,4 +33,31 @@ message CreatePlayerRequest {
 
 message CreatePlayerReply {
   string id = 1;
+}
+
+enum GameResult {
+  WIN = 0;
+  DRAW = 1;
+  INTERRUPTED = 2;
+}
+
+message CreateMatchResultRequest {
+  GameResult game_result = 1;
+  repeated PlayerPlacementRequest player_placements = 2;
+}
+
+message CreateMatchResultResponse {
+  string match_result_id = 1;
+  repeated PlayerPlacementResponse player_ranks = 2;
+}
+
+message PlayerPlacementRequest {
+  string player_id = 1;
+  int32 player_place = 2;
+}
+
+message PlayerPlacementResponse {
+  string player_id = 1;
+  int32 player_rank = 2;
+  int32 player_rank_change = 3;
 }
