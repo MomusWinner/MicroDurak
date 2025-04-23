@@ -5,10 +5,10 @@ import (
 )
 
 type Config struct {
-	// JWTPublic string `help:"Base64 Private key for the jwt"       env:"JWT_PUBLIC" required:"true"`
-	RabbitmqURL string `help:"Rabbitmq connection URL"              env:"RBBITMQ_URL" required:"true"`
-	Port        string `help:"Port to listen on"                    env:"PORT"                        default:"7070"`
-	LogLevel    string `help:"Log level (debug, info, warn, error)" env:"LOG_LEVEL"                   default:"info"`
+	JWTPublic   string `help:"Base64 Private key for the jwt"       env:"JWT_PUBLIC"   required:"true"`
+	RabbitmqURL string `help:"Rabbitmq connection URL"              env:"RABBITMQ_URL" required:"true"`
+	Port        string `help:"Port to listen on"                    env:"PORT"                         default:"7070"`
+	LogLevel    string `help:"Log level (debug, info, warn, error)" env:"LOG_LEVEL"                    default:"info"`
 }
 
 func Load() (*Config, error) {
