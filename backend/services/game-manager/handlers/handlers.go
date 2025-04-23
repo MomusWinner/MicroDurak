@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"fmt"
+	"log"
 
+	"github.com/MommusWinner/MicroDurak/lib/jwt"
 	"github.com/MommusWinner/MicroDurak/services/game-manager/config"
 	"github.com/MommusWinner/MicroDurak/services/game-manager/publisher"
 	"github.com/gorilla/websocket"
@@ -21,35 +22,51 @@ type Handler struct {
 
 func AddRoutes(e *echo.Echo, channel *amqp.Channel, config *config.Config) {
 	h := Handler{Config: config, Channel: channel}
-	e.GET("/game-manager", h.Connect)
+	e.GET("/game-manager/:gameId", h.Connect, jwt.AuthMiddleware(config.JWTPublic))
 }
 
 func (h Handler) Connect(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	request_id := 0
+	userId, ok := c.Get("playerId").(string)
+	if !ok {
+		panic("Add auth middleware")
+	}
 
 	if err != nil {
 		return err
 	}
 	defer ws.Close()
 
+	endRead := make(chan bool)
+
 	for {
 		// Write
-		err := ws.WriteMessage(websocket.TextMessage, []byte("Hello, Client!"))
 		if err != nil {
 			c.Logger().Error(err)
 		}
 
-		// Read
-		_, msg, err := ws.ReadMessage()
-		request_id++
-		if err != nil {
-			c.Logger().Error(err)
-		}
+		h.processQueue(userId, func(message []byte) {
+			ws.WriteMessage(websocket.TextMessage, message)
+		})
 
-		publisher.SendMessageToGame(h.Channel, []byte(msg))
+		go func() {
+			for {
+				select {
+				case <-endRead:
+					return
+				default:
+					_, msg, err := ws.ReadMessage()
+					if err != nil {
+						c.Logger().Error(err)
+					}
 
-		fmt.Printf("%s\n", msg)
+					publisher.SendMessageToGame(h.Channel, []byte(msg))
+					log.Printf("%s\n", msg)
+				}
+			}
+		}()
+
+		endRead <- true
 	}
 }
 
