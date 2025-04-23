@@ -48,8 +48,6 @@ type TableCard struct {
 }
 
 type Game struct {
-	Redis *redis.Client
-
 	Id              string        `json:"id"`
 	Settings        *GameSettings `json:"settings"`
 	Users           []*User       `json:"users"`

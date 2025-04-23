@@ -17,7 +17,7 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 		return CommandResponse{
 			Error:     gameError,
 			Command:   command,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -41,7 +41,7 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   command,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
 
@@ -70,7 +70,7 @@ func (g *Game) AttackHandler(attackCommand AttackCommand, user *User) CommandRes
 		return CommandResponse{
 			Error:     gameError,
 			Command:   attackCommand,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -84,7 +84,7 @@ func (g *Game) AttackHandler(attackCommand AttackCommand, user *User) CommandRes
 		return CommandResponse{
 			Error:     ERROR_SERVER,
 			Command:   attackCommand,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 	g.EndAttackUserId = make([]string, 0)
@@ -94,7 +94,7 @@ func (g *Game) AttackHandler(attackCommand AttackCommand, user *User) CommandRes
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   attackCommand,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
 
@@ -123,7 +123,7 @@ func (g *Game) DefendHandler(defendCommand DefendCommand, user *User) CommandRes
 		return CommandResponse{
 			Error:     gameError,
 			Command:   defendCommand,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -149,7 +149,7 @@ func (g *Game) DefendHandler(defendCommand DefendCommand, user *User) CommandRes
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   defendCommand,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
 
@@ -165,7 +165,7 @@ func (g *Game) TakeAllCardHandler(command Command, user *User) CommandResponse {
 		return CommandResponse{
 			Error:     gameError,
 			Command:   command,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -180,7 +180,7 @@ func (g *Game) TakeAllCardHandler(command Command, user *User) CommandResponse {
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   command,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
 
@@ -189,7 +189,7 @@ func (g *Game) ReadyHandler(command Command, user *User) CommandResponse {
 		return CommandResponse{
 			Error:     ERROR_USER_ALREADY_READY,
 			Command:   command,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -206,7 +206,7 @@ func (g *Game) ReadyHandler(command Command, user *User) CommandResponse {
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   command,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
 
@@ -221,7 +221,7 @@ func (g *Game) CheckAttackTimerHandler(command Command, user *User) CommandRespo
 		return CommandResponse{
 			Error:     gameError,
 			Command:   command,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -235,7 +235,7 @@ func (g *Game) CheckAttackTimerHandler(command Command, user *User) CommandRespo
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   command,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
 
@@ -250,7 +250,7 @@ func (g *Game) CheckDefendTimerHandler(command Command, user *User) CommandRespo
 		return CommandResponse{
 			Error:     gameError,
 			Command:   command,
-			GameState: gameToGameStateResponse(g, *user),
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -264,6 +264,6 @@ func (g *Game) CheckDefendTimerHandler(command Command, user *User) CommandRespo
 	return CommandResponse{
 		Error:     ERROR_EMPTY,
 		Command:   command,
-		GameState: gameToGameStateResponse(g, *user),
+		GameState: gameToGameStateResponse(g, user),
 	}
 }
