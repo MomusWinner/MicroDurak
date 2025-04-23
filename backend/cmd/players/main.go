@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/MommusWinner/MicroDurak/internal/database"
 	pb "github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/services/players"
 	"github.com/MommusWinner/MicroDurak/services/players/config"
@@ -29,9 +28,7 @@ func run(ctx context.Context, grpcServer *grpc.Server) error {
 	}
 	defer conn.Close(ctx)
 
-	queries := database.New(conn)
-
-	pb.RegisterPlayersServer(grpcServer, players.NewPlayerService(queries, config))
+	pb.RegisterPlayersServer(grpcServer, players.NewPlayerService(conn, config))
 
 	errChan := make(chan error, 2)
 
