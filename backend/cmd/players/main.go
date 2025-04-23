@@ -12,7 +12,7 @@ import (
 	pb "github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/services/players"
 	"github.com/MommusWinner/MicroDurak/services/players/config"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 )
 
@@ -22,13 +22,13 @@ func run(ctx context.Context, grpcServer *grpc.Server) error {
 		return err
 	}
 
-	conn, err := pgx.Connect(ctx, config.DatabaseURL)
+	pool, err := pgxpool.New(ctx, config.DatabaseURL)
 	if err != nil {
 		return err
 	}
-	defer conn.Close(ctx)
+	defer pool.Close()
 
-	pb.RegisterPlayersServer(grpcServer, players.NewPlayerService(conn, config))
+	pb.RegisterPlayersServer(grpcServer, players.NewPlayerService(pool, config))
 
 	errChan := make(chan error, 2)
 

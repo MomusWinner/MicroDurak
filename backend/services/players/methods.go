@@ -9,20 +9,20 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/services/players/config"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type PlayerService struct {
 	players.UnimplementedPlayersServer
-	DBConn    *pgx.Conn
+	DBConn    *pgxpool.Pool
 	DBQueries *database.Queries
 	Config    *config.Config
 }
 
-func NewPlayerService(dbConn *pgx.Conn, config *config.Config) *PlayerService {
+func NewPlayerService(dbConn *pgxpool.Pool, config *config.Config) *PlayerService {
 	dbQueries := database.New(dbConn)
 	return &PlayerService{DBConn: dbConn, DBQueries: dbQueries, Config: config}
 }
