@@ -44,3 +44,22 @@ func (q *Queries) GetPlayerById(ctx context.Context, id pgtype.UUID) (Player, er
 	)
 	return i, err
 }
+
+const updatePlayerRating = `-- name: UpdatePlayerRating :one
+update player
+   set rating = $2
+ where id = $1
+returning rating
+`
+
+type UpdatePlayerRatingParams struct {
+	ID     pgtype.UUID
+	Rating int32
+}
+
+func (q *Queries) UpdatePlayerRating(ctx context.Context, arg UpdatePlayerRatingParams) (int32, error) {
+	row := q.db.QueryRow(ctx, updatePlayerRating, arg.ID, arg.Rating)
+	var rating int32
+	err := row.Scan(&rating)
+	return rating, err
+}

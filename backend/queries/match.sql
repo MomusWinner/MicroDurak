@@ -4,6 +4,6 @@ values ($1, $2)
 returning *;
 
 -- name: AddPlayerPlacement :one
-insert into player_placement (match_result_id, player_id, player_place, rank_change)
+insert into player_placement (match_result_id, player_id, player_place, rating_change)
 values ($1, $2, $3, $4)
 returning *;

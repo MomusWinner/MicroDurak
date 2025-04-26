@@ -78,5 +78,5 @@ type PlayerPlacement struct {
 	MatchResultID pgtype.UUID
 	PlayerID      pgtype.UUID
 	PlayerPlace   int16
-	RankChange    int32
+	RatingChange  int32
 }

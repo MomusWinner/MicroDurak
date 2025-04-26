@@ -15,7 +15,7 @@ create table player_auth (
   password varchar(300) not null
 );
 
-CREATE TYPE game_result AS ENUM ('win', 'draw', 'interruped');
+create type game_result as enum ('win', 'draw', 'interruped');
 
 create table match_result (
     id uuid primary key default uuid_generate_v4(),
@@ -27,7 +27,7 @@ create table player_placement (
     match_result_id uuid references match_result on delete cascade,
     player_id uuid references player on delete cascade,
     player_place smallint not null,
-    rank_change integer not null,
+    rating_change integer not null,
 	primary key (match_result_id, player_id)
 );
 

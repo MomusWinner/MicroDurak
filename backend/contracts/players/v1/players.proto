@@ -48,7 +48,7 @@ message CreateMatchResultRequest {
 
 message CreateMatchResultResponse {
   string match_result_id = 1;
-  repeated PlayerPlacementResponse player_ranks = 2;
+  repeated PlayerPlacementResponse player_ratings = 2;
 }
 
 message PlayerPlacementRequest {
@@ -58,6 +58,6 @@ message PlayerPlacementRequest {
 
 message PlayerPlacementResponse {
   string player_id = 1;
-  int32 player_rank = 2;
-  int32 player_rank_change = 3;
+  int32 player_rating = 2;
+  int32 player_rating_change = 3;
 }

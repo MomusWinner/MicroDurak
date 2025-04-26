@@ -12,16 +12,16 @@ import (
 )
 
 const addPlayerPlacement = `-- name: AddPlayerPlacement :one
-insert into player_placement (match_result_id, player_id, player_place, rank_change)
+insert into player_placement (match_result_id, player_id, player_place, rating_change)
 values ($1, $2, $3, $4)
-returning match_result_id, player_id, player_place, rank_change
+returning match_result_id, player_id, player_place, rating_change
 `
 
 type AddPlayerPlacementParams struct {
 	MatchResultID pgtype.UUID
 	PlayerID      pgtype.UUID
 	PlayerPlace   int16
-	RankChange    int32
+	RatingChange  int32
 }
 
 func (q *Queries) AddPlayerPlacement(ctx context.Context, arg AddPlayerPlacementParams) (PlayerPlacement, error) {
@@ -29,14 +29,14 @@ func (q *Queries) AddPlayerPlacement(ctx context.Context, arg AddPlayerPlacement
 		arg.MatchResultID,
 		arg.PlayerID,
 		arg.PlayerPlace,
-		arg.RankChange,
+		arg.RatingChange,
 	)
 	var i PlayerPlacement
 	err := row.Scan(
 		&i.MatchResultID,
 		&i.PlayerID,
 		&i.PlayerPlace,
-		&i.RankChange,
+		&i.RatingChange,
 	)
 	return i, err
 }

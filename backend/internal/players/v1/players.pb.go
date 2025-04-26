@@ -401,7 +401,7 @@ func (x *CreateMatchResultRequest) GetPlayerPlacements() []*PlayerPlacementReque
 type CreateMatchResultResponse struct {
 	state         protoimpl.MessageState     `protogen:"open.v1"`
 	MatchResultId string                     `protobuf:"bytes,1,opt,name=match_result_id,json=matchResultId,proto3" json:"match_result_id,omitempty"`
-	PlayerRanks   []*PlayerPlacementResponse `protobuf:"bytes,2,rep,name=player_ranks,json=playerRanks,proto3" json:"player_ranks,omitempty"`
+	PlayerRatings []*PlayerPlacementResponse `protobuf:"bytes,2,rep,name=player_ratings,json=playerRatings,proto3" json:"player_ratings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -443,9 +443,9 @@ func (x *CreateMatchResultResponse) GetMatchResultId() string {
 	return ""
 }
 
-func (x *CreateMatchResultResponse) GetPlayerRanks() []*PlayerPlacementResponse {
+func (x *CreateMatchResultResponse) GetPlayerRatings() []*PlayerPlacementResponse {
 	if x != nil {
-		return x.PlayerRanks
+		return x.PlayerRatings
 	}
 	return nil
 }
@@ -503,12 +503,12 @@ func (x *PlayerPlacementRequest) GetPlayerPlace() int32 {
 }
 
 type PlayerPlacementResponse struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	PlayerId         string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	PlayerRank       int32                  `protobuf:"varint,2,opt,name=player_rank,json=playerRank,proto3" json:"player_rank,omitempty"`
-	PlayerRankChange int32                  `protobuf:"varint,3,opt,name=player_rank_change,json=playerRankChange,proto3" json:"player_rank_change,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId           string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	PlayerRating       int32                  `protobuf:"varint,2,opt,name=player_rating,json=playerRating,proto3" json:"player_rating,omitempty"`
+	PlayerRatingChange int32                  `protobuf:"varint,3,opt,name=player_rating_change,json=playerRatingChange,proto3" json:"player_rating_change,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *PlayerPlacementResponse) Reset() {
@@ -548,16 +548,16 @@ func (x *PlayerPlacementResponse) GetPlayerId() string {
 	return ""
 }
 
-func (x *PlayerPlacementResponse) GetPlayerRank() int32 {
+func (x *PlayerPlacementResponse) GetPlayerRating() int32 {
 	if x != nil {
-		return x.PlayerRank
+		return x.PlayerRating
 	}
 	return 0
 }
 
-func (x *PlayerPlacementResponse) GetPlayerRankChange() int32 {
+func (x *PlayerPlacementResponse) GetPlayerRatingChange() int32 {
 	if x != nil {
-		return x.PlayerRankChange
+		return x.PlayerRatingChange
 	}
 	return 0
 }
@@ -588,18 +588,17 @@ const file_players_v1_players_proto_rawDesc = "" +
 	"\x18CreateMatchResultRequest\x12,\n" +
 	"\vgame_result\x18\x01 \x01(\x0e2\v.GameResultR\n" +
 	"gameResult\x12D\n" +
-	"\x11player_placements\x18\x02 \x03(\v2\x17.PlayerPlacementRequestR\x10playerPlacements\"\x80\x01\n" +
+	"\x11player_placements\x18\x02 \x03(\v2\x17.PlayerPlacementRequestR\x10playerPlacements\"\x84\x01\n" +
 	"\x19CreateMatchResultResponse\x12&\n" +
-	"\x0fmatch_result_id\x18\x01 \x01(\tR\rmatchResultId\x12;\n" +
-	"\fplayer_ranks\x18\x02 \x03(\v2\x18.PlayerPlacementResponseR\vplayerRanks\"X\n" +
+	"\x0fmatch_result_id\x18\x01 \x01(\tR\rmatchResultId\x12?\n" +
+	"\x0eplayer_ratings\x18\x02 \x03(\v2\x18.PlayerPlacementResponseR\rplayerRatings\"X\n" +
 	"\x16PlayerPlacementRequest\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12!\n" +
-	"\fplayer_place\x18\x02 \x01(\x05R\vplayerPlace\"\x85\x01\n" +
+	"\fplayer_place\x18\x02 \x01(\x05R\vplayerPlace\"\x8d\x01\n" +
 	"\x17PlayerPlacementResponse\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x1f\n" +
-	"\vplayer_rank\x18\x02 \x01(\x05R\n" +
-	"playerRank\x12,\n" +
-	"\x12player_rank_change\x18\x03 \x01(\x05R\x10playerRankChange*0\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12#\n" +
+	"\rplayer_rating\x18\x02 \x01(\x05R\fplayerRating\x120\n" +
+	"\x14player_rating_change\x18\x03 \x01(\x05R\x12playerRatingChange*0\n" +
 	"\n" +
 	"GameResult\x12\a\n" +
 	"\x03WIN\x10\x00\x12\b\n" +
@@ -640,7 +639,7 @@ var file_players_v1_players_proto_goTypes = []any{
 var file_players_v1_players_proto_depIdxs = []int32{
 	0, // 0: CreateMatchResultRequest.game_result:type_name -> GameResult
 	8, // 1: CreateMatchResultRequest.player_placements:type_name -> PlayerPlacementRequest
-	9, // 2: CreateMatchResultResponse.player_ranks:type_name -> PlayerPlacementResponse
+	9, // 2: CreateMatchResultResponse.player_ratings:type_name -> PlayerPlacementResponse
 	4, // 3: Players.CreatePlayer:input_type -> CreatePlayerRequest
 	3, // 4: Players.GetPlayer:input_type -> GetPlayerRequest
 	6, // 5: Players.CreateMatchResult:input_type -> CreateMatchResultRequest
