@@ -5,3 +5,9 @@ returning id;
 
 -- name: GetPlayerById :one
 select * from player where id = $1;
+
+-- name: UpdatePlayerRating :one
+update player
+   set rating = $2
+ where id = $1
+returning rating;
