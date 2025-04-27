@@ -6,11 +6,10 @@ WORKDIR /micro-durak/$SERVICE_NAME
 
 COPY ./cmd/$SERVICE_NAME ./cmd/$SERVICE_NAME
 COPY ./services/$SERVICE_NAME ./services/$SERVICE_NAME
-COPY ./vendor ./vendor
+COPY ./vendor* ./
 COPY ./lib ./lib
 COPY ./internal ./internal
 COPY ./go.mod ./go.sum ./
-COPY ./vendor ./vendor
 
 RUN go build -o app ./cmd/$SERVICE_NAME/main.go
 
