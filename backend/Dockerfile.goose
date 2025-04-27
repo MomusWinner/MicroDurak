@@ -19,5 +19,6 @@ FROM alpine:3.21
 WORKDIR /root/
 
 COPY --from=builder /build/goose ./
+COPY ./migrations /migrations
 
 CMD ["./goose"]
