@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"github.com/MommusWinner/MicroDurak/internal/players/v1"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
+	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/MommusWinner/MicroDurak/internal/players/v1"
+	"github.com/MommusWinner/MicroDurak/lib/jwt"
+	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker/types"
-	"github.com/labstack/echo/v4"
 )
 
 func AddRoutes(
@@ -20,6 +21,6 @@ func AddRoutes(
 		Config:        config,
 		PlayersClient: playersClient,
 	}
-	e.GET("/find-match", h.FindMatch)
+	e.GET("/find-match", h.FindMatch, jwt.AuthMiddleware(config.JWTPublic))
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 }

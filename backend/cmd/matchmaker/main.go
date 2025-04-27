@@ -9,7 +9,6 @@ import (
 
 	"github.com/MommusWinner/MicroDurak/internal/game/v1"
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
-	"github.com/MommusWinner/MicroDurak/lib/jwt"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
 	"github.com/MommusWinner/MicroDurak/services/matchmaker/handlers"
@@ -55,7 +54,6 @@ func run(ctx context.Context, e *echo.Echo) error {
 	m := matchmaker.New(queueChan, config, redisClient, gameClient)
 
 	handlers.AddRoutes(e, queueChan, config, playerClient)
-	e.Use(jwt.AuthMiddleware(config.JWTPublic))
 
 	errChan := make(chan error, 2)
 
