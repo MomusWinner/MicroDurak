@@ -23,6 +23,9 @@ jobs:
           service: auth
         - image: ghcr.io/momuswinner/players
           service: players
+        - image: ghcr.io/momuswinner/migrate
+          dockerfile: backend/Dockerfile.goose
+          service: migrate
     permissions:
       contents: read
       packages: write
@@ -56,4 +59,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
-          file: backend/Dockerfile.service
+          file: ${{ matrix.dockerfile != '' && matrix.dockerfile || 'backend/Dockerfile.service' }}
