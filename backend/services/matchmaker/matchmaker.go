@@ -3,7 +3,6 @@ package matchmaker
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/MommusWinner/MicroDurak/internal/game/v1"
