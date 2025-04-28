@@ -48,9 +48,9 @@ local function websocket_callback(self, conn, data)
 		print(LOG_PREFIX .. "Receiving: '" .. tostring(data.message) .. "'")
 		local status = json.decode(data.message)
 		pprint(status)
-		if status.status == "searching" then
+		if status.status == "pending" or status.status == "found_group" then
 			websoket.send(connection, "ok")
-		elseif status.status == "found" then
+		elseif status.status == "created" then
 			s.game_id = status.game_id
 			call_observers(s.game_id)
 		end
