@@ -23,6 +23,6 @@ func AddRoutes(
 		Config:        config,
 		PlayersClient: playersClient,
 	}
-	e.GET("/find-match", h.FindMatch, jwt.AuthMiddleware(config.JWTPublic))
+	e.GET("/matchmaker/find-match", h.FindMatch, jwt.AuthMiddleware(config.JWTPublic))
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 }

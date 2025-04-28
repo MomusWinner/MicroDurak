@@ -10,6 +10,6 @@ import (
 
 func AddRoutes(e *echo.Echo, config *config.Config, queries *database.Queries, playersClient players.PlayersClient) {
 	h := handlers.Handler{DBQueries: queries, Config: config, PlayersClient: playersClient}
-	e.POST("/register", h.Register)
-	e.POST("/login", h.Login)
+	e.POST("/auth/register", h.Register)
+	e.POST("/auth/login", h.Login)
 }
