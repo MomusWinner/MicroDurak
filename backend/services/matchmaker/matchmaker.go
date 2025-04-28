@@ -41,7 +41,7 @@ func New(
 func (m *Matchmaker) Start(
 	ctx context.Context,
 ) error {
-	fmt.Printf("Starting matchmaker\n\n")
+	// fmt.Printf("Starting matchmaker\n\n")
 	go func() {
 		for {
 			select {
@@ -63,7 +63,7 @@ func (m *Matchmaker) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Cancelling matchmaker")
+			// fmt.Println("Cancelling matchmaker")
 			return nil
 		case <-ticker.C:
 			if len(m.queue) == 0 {
@@ -73,20 +73,20 @@ func (m *Matchmaker) Start(
 			if err != nil {
 				return err
 			}
-			fmt.Println("----------")
+			// fmt.Println("----------")
 		}
 	}
 }
 
 func (m *Matchmaker) matchmake(ctx context.Context) error {
 	for playerId, player := range m.queue {
-		fmt.Printf("Processing player: %s\n", playerId)
+		// fmt.Printf("Processing player: %s\n", playerId)
 
 		storedPlayer, err := m.playerClient.GetPlayer(ctx, playerId)
 		if err != nil {
 			storedPlayer, _ = m.playerClient.AddPlayer(ctx, playerId, player.Rating)
 		}
-		fmt.Printf("Status: %d\n", storedPlayer.Status)
+		// fmt.Printf("Status: %d\n", storedPlayer.Status)
 
 		switch storedPlayer.Status {
 		case rc.StatusSearch:
@@ -108,13 +108,13 @@ func (m *Matchmaker) matchmake(ctx context.Context) error {
 			err := m.handleMoved(ctx, storedPlayer)
 			var gidError types.ErrGroupTooSmall
 			if errors.As(err, &gidError) {
-				fmt.Println(err)
+				// fmt.Println(err)
 				continue
 			} else if err != nil {
 				return err
 			}
 		}
-		fmt.Println("")
+		// fmt.Println("")
 	}
 	return nil
 }
@@ -123,7 +123,7 @@ func (m *Matchmaker) handleSearch(ctx context.Context, player types.MatchChan) e
 	scoreRange := int(max((time.Now().Unix()-player.SentTime.Unix())/increaceRangeAfter, 1) * increaceRangeBy)
 	low := player.Rating - scoreRange
 	high := player.Rating + scoreRange
-	fmt.Printf("Low %d; High %d\n", low, high)
+	// fmt.Printf("Low %d; High %d\n", low, high)
 
 	count, err := m.playerClient.CountGroups(ctx)
 	if err != nil {
@@ -143,7 +143,7 @@ func (m *Matchmaker) handleSearch(ctx context.Context, player types.MatchChan) e
 			}
 
 			m.playerClient.AddToGroup(ctx, groupId, redis.Z{Score: float64(player.Rating), Member: player.PlayerId})
-			fmt.Printf("Found group: %v\n", groups[0])
+			// fmt.Printf("Found group: %v\n", groups[0])
 			return nil
 		}
 	} else {
@@ -155,7 +155,7 @@ func (m *Matchmaker) handleSearch(ctx context.Context, player types.MatchChan) e
 		if len(players) <= 1 {
 			return types.ErrGroupNotFound
 		}
-		fmt.Printf("Found players: %v\n", players)
+		// fmt.Printf("Found players: %v\n", players)
 
 		err = m.playerClient.AddGroup(ctx, players[:min(groupSize, len(players))])
 		if err != nil {
@@ -201,7 +201,7 @@ func (m *Matchmaker) handleMoved(
 	for _, grouppedPlayer := range grouppedPlayers {
 		m.playerClient.SetPlayerStatus(ctx, grouppedPlayer, rc.StatusEmpty)
 
-		fmt.Printf("Sending to player: %s\n", grouppedPlayer)
+		// fmt.Printf("Sending to player: %s\n", grouppedPlayer)
 		m.queue[grouppedPlayer].ReturnChan <- response
 		delete(m.queue, grouppedPlayer)
 	}
