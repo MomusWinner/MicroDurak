@@ -1,35 +1,40 @@
 local defsave = require("defsave.defsave")
+local s = require("main.game_state")
 
 local M = {}
+
+local default_settings = {
+	token = nil,
+	user_id = nil,
+}
+
+local settings = default_settings
 
 function M.init()
 	defsave.appname = "micro_durak"
 	defsave.load("config")
 	defsave.default_data = {
 		config = {
-			token = nil,
+			settings = default_settings,
 		},
 	}
 	defsave.autosave = true
+	settings = defsave.get("config", "settings")
 end
 
-function M.get(key)
-	return defsave.get("config", key)
+function M.get()
+	return settings
 end
 
-function M.set(key, value)
-	if value == nil then
-		print("reset KEY: " .. key)
-	else
-		print("save KEY: " .. key .. " VALUE: " .. value)
+function M.set(new_settings)
+	settings = new_settings
+	if not s.simulate_save then
+		defsave.set("config", "settings", settings)
+		defsave.save("config")
 	end
-	defsave.set("config", key, value)
-	defsave.save("config")
 end
 
-function M.update(dt)
-	defsave.update(dt)
-end
+function M.update(dt) end
 
 function M.on_input(action_id, action)
 	if action_id == hash("key_c") then

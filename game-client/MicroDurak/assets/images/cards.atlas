@@ -1,16 +1,4 @@
 images {
-  image: "/assets/images/cards/Clovers_2_black.png"
-}
-images {
-  image: "/assets/images/cards/Clovers_3_black.png"
-}
-images {
-  image: "/assets/images/cards/Clovers_4_black.png"
-}
-images {
-  image: "/assets/images/cards/Clovers_5_black.png"
-}
-images {
   image: "/assets/images/cards/Clovers_6_black.png"
 }
 images {
@@ -26,31 +14,16 @@ images {
   image: "/assets/images/cards/Clovers_10_black.png"
 }
 images {
-  image: "/assets/images/cards/Clovers_A_black.png"
+  image: "/assets/images/cards/Clovers_11_black.png"
 }
 images {
-  image: "/assets/images/cards/Clovers_Jack_black.png"
+  image: "/assets/images/cards/Clovers_12_black.png"
 }
 images {
-  image: "/assets/images/cards/Clovers_King_black.png"
+  image: "/assets/images/cards/Clovers_13_black.png"
 }
 images {
-  image: "/assets/images/cards/Clovers_Queen_black.png"
-}
-images {
-  image: "/assets/images/cards/g3771.png"
-}
-images {
-  image: "/assets/images/cards/Hearts_2_black.png"
-}
-images {
-  image: "/assets/images/cards/Hearts_3_black.png"
-}
-images {
-  image: "/assets/images/cards/Hearts_4_black.png"
-}
-images {
-  image: "/assets/images/cards/Hearts_5_black.png"
+  image: "/assets/images/cards/Clovers_14_black.png"
 }
 images {
   image: "/assets/images/cards/Hearts_6_black.png"
@@ -68,28 +41,16 @@ images {
   image: "/assets/images/cards/Hearts_10_black.png"
 }
 images {
-  image: "/assets/images/cards/Hearts_A_black.png"
+  image: "/assets/images/cards/Hearts_11_black.png"
 }
 images {
-  image: "/assets/images/cards/Hearts_Jack_black.png"
+  image: "/assets/images/cards/Hearts_12_black.png"
 }
 images {
-  image: "/assets/images/cards/Hearts_King_black.png"
+  image: "/assets/images/cards/Hearts_13_black.png"
 }
 images {
-  image: "/assets/images/cards/Hearts_Queen_black.png"
-}
-images {
-  image: "/assets/images/cards/Pikes_2_black.png"
-}
-images {
-  image: "/assets/images/cards/Pikes_3_black.png"
-}
-images {
-  image: "/assets/images/cards/Pikes_4_black.png"
-}
-images {
-  image: "/assets/images/cards/Pikes_5_black.png"
+  image: "/assets/images/cards/Hearts_14_black.png"
 }
 images {
   image: "/assets/images/cards/Pikes_6_black.png"
@@ -107,28 +68,16 @@ images {
   image: "/assets/images/cards/Pikes_10_black.png"
 }
 images {
-  image: "/assets/images/cards/Pikes_A_black.png"
+  image: "/assets/images/cards/Pikes_11_black.png"
 }
 images {
-  image: "/assets/images/cards/Pikes_Jack_black.png"
+  image: "/assets/images/cards/Pikes_12_black.png"
 }
 images {
-  image: "/assets/images/cards/Pikes_King_black.png"
+  image: "/assets/images/cards/Pikes_13_black.png"
 }
 images {
-  image: "/assets/images/cards/Pikes_Queen_black.png"
-}
-images {
-  image: "/assets/images/cards/Tiles_2_black.png"
-}
-images {
-  image: "/assets/images/cards/Tiles_3_black.png"
-}
-images {
-  image: "/assets/images/cards/Tiles_4_black.png"
-}
-images {
-  image: "/assets/images/cards/Tiles_5_black.png"
+  image: "/assets/images/cards/Pikes_14_black.png"
 }
 images {
   image: "/assets/images/cards/Tiles_6_black.png"
@@ -146,15 +95,18 @@ images {
   image: "/assets/images/cards/Tiles_10_black.png"
 }
 images {
-  image: "/assets/images/cards/Tiles_A_black.png"
+  image: "/assets/images/cards/Tiles_11_black.png"
 }
 images {
-  image: "/assets/images/cards/Tiles_Jack_black.png"
+  image: "/assets/images/cards/Tiles_12_black.png"
 }
 images {
-  image: "/assets/images/cards/Tiles_King_black.png"
+  image: "/assets/images/cards/Tiles_13_black.png"
 }
 images {
-  image: "/assets/images/cards/Tiles_Queen_black.png"
+  image: "/assets/images/cards/Tiles_14_black.png"
+}
+images {
+  image: "/assets/images/cards/CardBack.png"
 }
 extrude_borders: 2

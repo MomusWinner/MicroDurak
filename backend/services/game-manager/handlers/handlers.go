@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"time"
 
 	"github.com/MommusWinner/MicroDurak/lib/jwt"
 	"github.com/MommusWinner/MicroDurak/services/game-manager/config"
@@ -33,6 +34,12 @@ func (h Handler) Connect(c echo.Context) error {
 		panic("Add auth middleware")
 	}
 
+	gameId := c.Param("gameId")
+	if gameId == "" {
+		c.Response().Status = 400
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -42,35 +49,42 @@ func (h Handler) Connect(c echo.Context) error {
 	defer metrics.PlayersConnected.WithLabelValues(h.Config.PodName, h.Config.Namespace).Dec()
 
 	endRead := make(chan bool)
+	defer close(endRead) // Закрываем канал при выходе из функции
 
+	// Запускаем горутину для чтения сообщений
+	go func() {
+		for {
+			select {
+			case <-endRead:
+				return
+			default:
+				_, msg, err := ws.ReadMessage()
+				if err != nil {
+					c.Logger().Error(err)
+					return
+				}
+				log.Printf("ReadMessage: %v", string(msg))
+				publisher.SendMessageToGame(h.Channel, msg)
+				log.Printf("%s\n", msg)
+			}
+		}
+	}()
+
+	// Основной цикл для записи сообщений
 	for {
-		h.processQueue(userId, func(message []byte) {
-			ws.WriteMessage(websocket.TextMessage, message)
+		h.processQueue(gameId, userId, func(message []byte) {
+			if err := ws.WriteMessage(websocket.TextMessage, message); err != nil {
+				c.Logger().Error(err)
+			}
 		})
 
-		go func() {
-			for {
-				select {
-				case <-endRead:
-					return
-				default:
-					_, msg, err := ws.ReadMessage()
-					if err != nil {
-						c.Logger().Error(err)
-					}
-
-					publisher.SendMessageToGame(h.Channel, []byte(msg))
-					log.Printf("%s\n", msg)
-				}
-			}
-		}()
-
-		endRead <- true
+		// Небольшая пауза, чтобы не нагружать CPU
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func (h Handler) processQueue(userId string, processMessage func([]byte)) {
-	queue_name := "game-manager-" + userId
+func (h Handler) processQueue(gameId string, userId string, processMessage func([]byte)) {
+	queue_name := "game-manager-" + userId + "_" + gameId
 	exchange_name := "game-manager-ex"
 
 	_, err := h.Channel.QueueDeclare(

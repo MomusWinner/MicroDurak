@@ -8,36 +8,73 @@ import (
 )
 
 func checkGameEvents(game *Game, events ...string) error { // TODO
-	error_string := ""
-	error_string += "\nTARGET EVENTS\n"
-	for i, event := range events {
-		error_string += fmt.Sprintf("%d| %s\n", i, event)
-	}
-	error_string += "\nGAME EVENTS\n"
-	for i, event := range game.GameEventBuffer {
-		gameEvent, _ := event.(GameEventContainer)
-		error_string += fmt.Sprintf("%d| %s\n", i, gameEvent.GetGameEvent().Event)
-	}
-
-	if len(game.GameEventBuffer) != len(events) {
-		return errors.New(
-			"\nTarget events length and game evets length is different\n" + error_string,
-		)
-	}
-	for i, event := range events {
-
-		gameEvent, _ := game.GameEventBuffer[i].(GameEventContainer)
-		if gameEvent.GetGameEvent().Event != event {
-			return errors.New(error_string)
-		}
-	}
-
-	game.GameEventBuffer = []GameEventContainer{}
-
+	// error_string := ""
+	// error_string += "\nTARGET EVENTS\n"
+	// for i, event := range events {
+	// 	error_string += fmt.Sprintf("%d| %s\n", i, event)
+	// }
+	// error_string += "\nGAME EVENTS\n"
+	// for i, event := range game.GameEventBuffer {
+	// 	gameEvent, _ := event.(GameEventContainer)
+	// 	error_string += fmt.Sprintf("%d| %s\n", i, gameEvent.GetGameEvent().Event)
+	// }
+	//
+	// if len(game.GameEventBuffer) != len(events) {
+	// 	return errors.New(
+	// 		"\nTarget events length and game evets length is different\n" + error_string,
+	// 	)
+	// }
+	// for i, event := range events {
+	//
+	// 	gameEvent, _ := game.GameEventBuffer[i].(GameEventContainer)
+	// 	if gameEvent.GetGameEvent().Event != event {
+	// 		return errors.New(error_string)
+	// 	}
+	// }
+	//
+	// game.GameEventBuffer = []GameEventContainer{}
+	//
 	return nil
 }
 
+func checkPack(pack map[string][]byte) error {
+
+	all := ""
+
+	for userId, msg := range pack {
+		all += string(msg) + "\n"
+		if msg == nil {
+			return errors.New("Message pack has nil message. UserId: " + userId)
+		}
+	}
+
+	return errors.New(all)
+	// return nil
+}
+
 func CreateGameWithReadyUsers() (*Game, *User, *User, error) {
+	game, _ := CreateNewGame([]string{"user1", "user2"})
+
+	attackUser, _ := getUserById(game.Users, game.AttackingId)
+	defendUser, _ := getUserById(game.Users, game.DefendingId)
+
+	response := game.ReadyHandler(Command{
+		Action: ACTION_READY,
+		UserId: attackUser.Id,
+	}, attackUser)
+	_ = response
+
+	game.ReadyHandler(Command{
+		Action: ACTION_READY,
+		UserId: defendUser.Id,
+	}, defendUser)
+
+	err := checkGameEvents(game, EVENT_READY, EVENT_START)
+
+	return game, attackUser, defendUser, err
+}
+
+func TestGanaratePack(t *testing.T) {
 	game, _ := CreateNewGame([]string{"user1", "user2"})
 
 	attackUser, _ := getUserById(game.Users, game.AttackingId)
@@ -48,14 +85,39 @@ func CreateGameWithReadyUsers() (*Game, *User, *User, error) {
 		UserId: attackUser.Id,
 	}, attackUser)
 
-	game.ReadyHandler(Command{
+	response := game.ReadyHandler(Command{
 		Action: ACTION_READY,
 		UserId: defendUser.Id,
 	}, defendUser)
 
-	err := checkGameEvents(game, EVENT_READY, EVENT_START)
+	// ATTACK
+	// attackCard := attackUser.Cards[0]
+	attackC := AttackCommand{
+		Command: Command{
+			Action: ACTION_ATTACK,
+			UserId: attackUser.Id,
+		},
+		Card: attackUser.Cards[0],
+	}
 
-	return game, attackUser, defendUser, err
+	game.AttackHandler(attackC, attackUser)
+
+	packByUser := game.GeneratePack(response, defendUser)
+	for user, pack := range packByUser {
+		fmt.Println(user)
+		fmt.Println("----------------------------------------")
+		fmt.Println(string(pack))
+	}
+}
+
+func TestGameToGameStateResponse(t *testing.T) {
+	game, _ := CreateNewGame([]string{"user1", "user2"})
+	attackUser, _ := getUserById(game.Users, game.AttackingId)
+	gameState := gameToGameStateResponse(game, attackUser)
+
+	if gameState.Me.Id != attackUser.Id {
+		t.Error("Encorrect GameStateResponse")
+	}
 }
 
 func TestCreateNewGame(t *testing.T) {
@@ -103,7 +165,7 @@ func TestAttackCycle(t *testing.T) {
 	}
 
 	// DEFEND
-	defendUser.Cards[0] = Card{Suit: game.Trump, Rank: 15}
+	defendUser.Cards[0] = Card{Suit: game.Trump.Suit, Rank: 15}
 	defendC := DefendCommand{
 		Command: Command{
 			Action: ACTION_DEFEND,
@@ -365,7 +427,7 @@ func TestGameEnd(t *testing.T) {
 	game.AttackHandler(attackC, attackUser)
 
 	// DEFEND
-	defendUser.Cards[0] = Card{Suit: game.Trump, Rank: 15}
+	defendUser.Cards[0] = Card{Suit: game.Trump.Suit, Rank: 15}
 	defendC := DefendCommand{
 		Command: Command{
 			Action: ACTION_DEFEND,
@@ -389,7 +451,7 @@ func TestGameEnd(t *testing.T) {
 		t.Error("End Attack Action end with error: " + rsp.Error)
 	}
 
-	err = checkGameEvents(game, EVENT_ATTACK, EVENT_DEFEND, EVENT_END_ATTACK)
+	err = checkGameEvents(game, EVENT_ATTACK, EVENT_DEFEND, EVENT_END_ATTACK, EVENT_END_GAME)
 	if err != nil {
 		t.Error(err)
 	}

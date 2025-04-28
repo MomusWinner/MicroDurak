@@ -32,6 +32,10 @@ const (
 	ERROR_UNREGISTERED_ACTION                           = "UNREGISTERED_ACTION"
 )
 
+type MessagePack struct {
+	Messages []interface{} `json:"messages"`
+}
+
 func gameToGameStateResponse(game *Game, targetUser *User) GameStateResponse {
 	return GameStateResponse{
 		Me:          *targetUser,
@@ -55,9 +59,10 @@ func usersToUserResponses(users []*User) []UserResponse {
 
 func userToUserResponse(user User) UserResponse {
 	return UserResponse{
-		Id:         user.Id,
-		Name:       user.Name,
-		CardLength: len(user.Cards),
+		Id:               user.Id,
+		Name:             user.Name,
+		CardLength:       len(user.Cards),
+		TakenCardsLength: len(user.TakenCards),
 	}
 }
 
@@ -67,7 +72,7 @@ type GameStateResponse struct {
 	AttackingId string         `json:"attacking_id"`
 	DefendingId string         `json:"defending_id"`
 	DeckLength  int            `json:"deck_length"`
-	Trump       int            `json:"trump"`
+	Trump       Card           `json:"trump"`
 	TableCards  []TableCard    `json:"table_cards"`
 }
 
@@ -91,12 +96,7 @@ type DefendCommand struct {
 
 // Response messages
 type CommandResponse struct {
-	Error     string            `json:"error"`
-	Command   any               `json:"command"`
-	GameState GameStateResponse `json:"game_state"`
-}
-
-type GameStateChangedMessage struct {
-	Action    Command           `json:"action"`
-	GameState GameStateResponse `json:"game_state"`
+	Error   string            `json:"error"`
+	Command any               `json:"command"`
+	State   GameStateResponse `json:"state"`
 }

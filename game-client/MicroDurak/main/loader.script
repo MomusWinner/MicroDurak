@@ -1,5 +1,3 @@
-
-
 function init(self)
 	msg.post(".", "acquire_input_focus")
 	self.current_proxy = nil
@@ -21,6 +19,10 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("load_registration") then
 		print("loading retgistration")
 		load_collection(self, "#registration_proxy")
+	end
+	if message_id == hash("load_match") then
+		print("loading retgistration")
+		load_collection(self, "#match_proxy")
 	end
 
 	if message_id == hash("proxy_loaded") then
