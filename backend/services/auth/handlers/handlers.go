@@ -86,7 +86,7 @@ func (h *Handler) Register(c echo.Context) error {
 		return internalServerError
 	}
 
-	return c.JSON(http.StatusOK, AuthResponse{
+	return c.JSON(http.StatusCreated, AuthResponse{
 		PlayerID: playerId.String(),
 		Token:    jwt,
 	})
