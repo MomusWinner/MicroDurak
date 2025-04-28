@@ -147,11 +147,11 @@ services:
         database:
           condition: service_healthy
       volumes:
-        - ./migrations:/migrations
+        - ./migrations:/root/migrations
       environment:
         GOOSE_DRIVER: postgres
         GOOSE_DBSTRING: "postgres://${DB_USER}:${DB_PASS}@database:5432/${DB_NAME}"
-        GOOSE_MIGRATION_DIR: /migrations
+        GOOSE_MIGRATION_DIR: /root/migrations
       command:
         - "./goose"
         - "up"
