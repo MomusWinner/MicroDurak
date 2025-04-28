@@ -9,7 +9,7 @@ import (
 )
 
 func SendMessageToGame(channel *amqp.Channel, message []byte) error {
-	queue_name := "game-commands"
+	queue_name := "game"
 	exchange_name := "gameEx"
 
 	_, err := channel.QueueDeclare(

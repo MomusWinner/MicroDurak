@@ -1,4 +1,4 @@
-local HOST = "http://localhost:8080/"
+local HOST = "http://localhost:8080/auth/"
 
 local M = {}
 
