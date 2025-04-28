@@ -314,7 +314,6 @@ func generateDeck() []Card {
 			i++
 		}
 	}
-	deck = deck[:13]
 
 	return deck
 }
