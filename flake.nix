@@ -50,6 +50,9 @@
           openssl
 
           cloc
+
+          # build defold
+          jdk
         ];
       };
     });
