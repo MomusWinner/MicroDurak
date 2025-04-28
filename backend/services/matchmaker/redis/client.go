@@ -321,7 +321,7 @@ func (pc *PlayerClient) GetGroupLen(ctx context.Context, groupId int) (int, erro
 
 func (pc *PlayerClient) GetGrouppedPlayers(ctx context.Context, groupId int, amount int) ([]string, error) {
 	groupKey := fmt.Sprintf(groupKeyFmt, groupId)
-	players, err := pc.client.LRange(ctx, groupKey+groupMembersKey, 0, int64(amount)).Result()
+	players, err := pc.client.SMembers(ctx, groupKey+groupMembersKey).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -338,8 +338,14 @@ func (pc *PlayerClient) RemoveFromGroup(ctx context.Context, groupId int, player
 }
 
 func (pc *PlayerClient) RemoveGroup(ctx context.Context, groupId int) error {
-	groupKey := fmt.Sprintf(groupMemFmt, groupId)
-	err := pc.client.ZRem(ctx, groupQueueKey, groupKey).Err()
+	groupMemKey := fmt.Sprintf(groupMemFmt, groupId)
+	err := pc.client.ZRem(ctx, groupQueueKey, groupMemKey).Err()
+	if err != nil {
+		return err
+	}
+
+	groupKey := fmt.Sprintf(groupKeyFmt, groupId)
+	err = pc.client.Del(ctx, groupKey+groupMembersKey).Err()
 	if err != nil {
 		return err
 	}
