@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: matchmaker-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app: matchmaker
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - port: 8080
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+      - port: 8080

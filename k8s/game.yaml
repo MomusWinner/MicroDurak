@@ -1,0 +1,65 @@
+# k8s/services/game.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: game
+  template:
+    metadata:
+      labels:
+        app: game
+    spec:
+      initContainers:
+        - name: wait-for-rabbitmq
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z rabbitmq 5672; do sleep 2; done']
+
+        - name: wait-for-players
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z players 9090; do sleep 2; done']
+
+      containers:
+        - name: game
+          imagePullPolicy: Always
+          image: ghcr.io/momuswinner/game:main
+          ports:
+            - containerPort: 7077
+          env:
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: RABBITMQ_URL
+
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@redis:6379/0"
+
+            - name: PLAYERS_URL
+              value: "players:9090"
+
+            - name: JWT_PUBLIC
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_PUBLIC
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: game
+spec:
+  selector:
+    app: game
+  ports:
+    - protocol: TCP
+      port: 7077
+      targetPort: 7077

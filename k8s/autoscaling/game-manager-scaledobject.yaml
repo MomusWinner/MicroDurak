@@ -1,0 +1,15 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: game-manager-scaledobject
+spec:
+  scaleTargetRef:
+    name: game
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
+      metricName: game_manager_clients_connected
+      threshold: "100"
+      query: |
+        sum(game_manager_clients_connected{namespace="<YOUR_NAMESPACE>"}) by (pod, namespace)

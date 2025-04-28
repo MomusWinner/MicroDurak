@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-database
+        image: postgres:17.4-alpine3.21
+        command: ["sh", "-c", "until pg_isready -h database -p 5432; do sleep 2; done"]
+
+      containers:
+      - name: migrate
+        imagePullPolicy: Always
+        image: ghcr.io/momuswinner/migrate:main
+        env:
+        - name: GOOSE_DRIVER
+          value: postgres
+        - name: GOOSE_MIGRATION_DIR
+          value: /migrations
+
+        - name: GOOSE_DBSTRING
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_URI
+
+        command: ["./goose", "up"]

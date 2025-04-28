@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+
+    spec:
+      initContainers:
+        - name: wait-for-database
+          image: postgres:17.4-alpine3.21
+          command: ["sh", "-c", "until pg_isready -h database -p 5432; do sleep 2; done"]
+        
+        - name: wait-for-players
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z players 9090; do sleep 2; done']
+
+      containers:
+        - name: auth
+          imagePullPolicy: Always
+          image: ghcr.io/momuswinner/auth:main
+          ports:
+            - containerPort: 8080
+          env:
+            - name: JWT_PRIVATE
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_PRIVATE
+
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: DB_URI
+                
+            - name: PLAYERS_URL
+              value: "players:9090"
+            - name: GAME_URL
+              value: "game:9090"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+spec:
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort
+
