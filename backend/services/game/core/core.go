@@ -15,7 +15,7 @@ import (
 
 var (
 	DefaultGameSettings = GameSettings{
-		TimeOver: 30,
+		TimeOver: 3000000000,
 	}
 )
 
@@ -54,7 +54,7 @@ type Game struct {
 	AttackingId     string        `json:"attacking_id"`
 	DefendingId     string        `json:"defending_id"`
 	Deck            []Card        `json:"deck"`
-	Trump           int           `json:"trump"` // suit
+	Trump           Card          `json:"trump"`
 	TableCards      []TableCard   `json:"table_cards"`
 	EndAttackUserId []string      `json:"end_attack_user_id"`
 	ReadyUsers      []string      `json:"ready_users"`
@@ -135,8 +135,8 @@ func CreateNewGame(userIds []string) (*Game, error) {
 		AttackingId: attacking_id,
 		DefendingId: defending.Id,
 		Deck:        deck,
-		Trump:       deck[len(deck)-1].Suit,
-		TableCards:  make([]TableCard, 0),
+		Trump:       deck[len(deck)-1],
+		TableCards:  []TableCard{},
 	}
 
 	return &game, nil
@@ -192,25 +192,19 @@ func (g *Game) HandleMessage(msg []byte) (map[string][]byte, error) {
 		response = g.EndAttackHandler(command, user)
 	case ACTION_TAKE_ALL_CARDS:
 		response = g.TakeAllCardHandler(command, user)
+	case ACTION_CHECK_ATTACK_TIMER:
+		response = g.CheckAttackTimerHandler(command, user)
+	case ACTION_CHECK_DEFEND_TIMER:
+		response = g.CheckDefendTimerHandler(command, user)
 	default:
 		response = CommandResponse{
-			Error:     ERROR_UNREGISTERED_ACTION,
-			Command:   command,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   ERROR_UNREGISTERED_ACTION,
+			Command: command,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 
-	responseByUser := make(map[string][]byte, 0)
-	responseString, _ := json.Marshal(response)
-	responseByUser[user.Id] = responseString
-
-	eventPackByUser := g.GenerateEventPack()
-	for userId, eventPack := range eventPackByUser {
-		eventString, _ := json.Marshal(eventPack)
-		responseByUser[userId] = eventString
-	}
-
-	return responseByUser, nil
+	return g.GeneratePack(response, user), nil
 }
 
 func (g *Game) StartAttackTimer() {
@@ -250,8 +244,8 @@ func (g *Game) removeUserCard(userId string, suit int, rank int) error {
 func (g *Game) beatOffCard(suit int, rank int, targetCard Card) bool {
 	for i := 0; i < len(g.TableCards); i++ {
 		if g.TableCards[i].Suit == targetCard.Suit && g.TableCards[i].Rank == targetCard.Rank {
-			if CardGreater(suit, rank, targetCard.Suit, targetCard.Rank, g.Trump) {
-				g.TableCards[i].BeatOff = &targetCard
+			if CardGreater(suit, rank, targetCard.Suit, targetCard.Rank, g.Trump.Suit) {
+				g.TableCards[i].BeatOff = &Card{Suit: suit, Rank: rank}
 				return true
 			} else {
 				return false
@@ -262,20 +256,43 @@ func (g *Game) beatOffCard(suit int, rank int, targetCard Card) bool {
 	return false
 }
 
-func (g *Game) GenerateEventPack() map[string]EventPack {
-	result := make(map[string]EventPack)
+func (g *Game) GeneratePack(response CommandResponse, user *User) map[string][]byte {
+	responseByUser := make(map[string][]byte, 0)
+
+	messagePackByUser := g.CreateMessangePackByUserFromEventBuffer()
+
+	for userId, messagePack := range messagePackByUser {
+		if userId == user.Id {
+			r := []interface{}{response}
+			messagePack.Messages = append(r, messagePack.Messages...)
+		}
+		messageString, err := json.Marshal(messagePack)
+		if messageString == nil || err != nil {
+			panic(err)
+		}
+		responseByUser[userId] = messageString
+	}
+
+	return responseByUser
+}
+
+func (g *Game) CreateMessangePackByUserFromEventBuffer() map[string]MessagePack {
+	result := make(map[string]MessagePack)
 	for _, user := range g.Users {
 		events := g.GameEventBuffer
 
-		eventPackEvents := make([]GameEventContainer, len(events))
+		eventPackEvents := []interface{}{}
 		for _, event := range events {
-			gameEvent := event.GetGameEvent()
-			gameEvent.State = gameToGameStateResponse(g, user)
-
-			eventPackEvents = append(eventPackEvents, event)
+			// fmt.Println(event)
+			newEvent := event.SetGameEventState(gameToGameStateResponse(g, user))
+			estring, _ := json.Marshal(newEvent)
+			fmt.Println("---------------------" + user.Id)
+			fmt.Println(string(estring))
+			fmt.Println("---------------------")
+			eventPackEvents = append(eventPackEvents, newEvent)
 		}
-		result[user.Id] = EventPack{
-			Events: eventPackEvents,
+		result[user.Id] = MessagePack{
+			Messages: eventPackEvents,
 		}
 	}
 
@@ -297,6 +314,7 @@ func generateDeck() []Card {
 			i++
 		}
 	}
+	deck = deck[:13]
 
 	return deck
 }
@@ -429,7 +447,7 @@ func (g *Game) AddEventToBuffer(event GameEventContainer) {
 	g.GameEventBuffer = append(g.GameEventBuffer, event)
 }
 
-func (g *Game) EndAttack() {
+func (g *Game) EndAttack(switch_users bool) {
 	newDefending, _ := nextUser(g.Users, g.DefendingId)
 
 	attacker, _ := getUserById(g.Users, g.AttackingId)
@@ -445,12 +463,16 @@ func (g *Game) EndAttack() {
 	}
 	g.AddCardsToUser(defender)
 
-	g.AttackingId = g.DefendingId
-	g.DefendingId = newDefending.Id
+	if switch_users {
+		g.AttackingId = g.DefendingId
+		g.DefendingId = newDefending.Id
+	}
+
 	g.TableCards = []TableCard{}
 	g.StopAttackTimer()
 	g.StopDefendTimer()
-	g.AddEventToBuffer(NewEndAttackEvent())
+	endEvent := NewEndAttackEvent()
+	g.AddEventToBuffer(endEvent)
 }
 
 func (g *Game) AddCardsToUser(user *User) {

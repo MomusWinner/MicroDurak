@@ -15,9 +15,9 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 
 	if gameError != ERROR_EMPTY {
 		return CommandResponse{
-			Error:     gameError,
-			Command:   command,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   gameError,
+			Command: command,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -27,7 +27,7 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 	attackUser, _ := getUserById(g.Users, g.AttackingId)
 
 	if len(g.EndAttackUserId) == len(g.Users)-1 {
-		g.EndAttack()
+		g.EndAttack(true)
 	}
 
 	if len(g.Deck) == 0 && len(defendUser.Cards) == 0 && len(attackUser.Cards) == 0 {
@@ -39,9 +39,9 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 	}
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   command,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: command,
+		State:   gameToGameStateResponse(g, user),
 	}
 }
 
@@ -63,14 +63,14 @@ func (g *Game) AttackHandler(attackCommand AttackCommand, user *User) CommandRes
 
 	gameError := errorChecker(gameErrors)
 	if gameError == ERROR_ATTACK_TIME_OVER {
-		g.EndAttack()
+		g.EndAttack(true)
 	}
 
 	if gameError != ERROR_EMPTY {
 		return CommandResponse{
-			Error:     gameError,
-			Command:   attackCommand,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   gameError,
+			Command: attackCommand,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -82,19 +82,21 @@ func (g *Game) AttackHandler(attackCommand AttackCommand, user *User) CommandRes
 	err := g.removeUserCard(user.Id, tableCard.Suit, tableCard.Rank)
 	if err != nil {
 		return CommandResponse{
-			Error:     ERROR_SERVER,
-			Command:   attackCommand,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   ERROR_SERVER,
+			Command: attackCommand,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 	g.EndAttackUserId = make([]string, 0)
 	g.StartDefendTimer()
-	g.AddEventToBuffer(NewAttackEvent(attackCommand.Card, attackCommand.UserId))
+	g.AddEventToBuffer(
+		NewAttackEvent(attackCommand.Card, attackCommand.UserId),
+	)
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   attackCommand,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: attackCommand,
+		State:   gameToGameStateResponse(g, user),
 	}
 }
 
@@ -121,9 +123,9 @@ func (g *Game) DefendHandler(defendCommand DefendCommand, user *User) CommandRes
 
 	if gameError != ERROR_EMPTY {
 		return CommandResponse{
-			Error:     gameError,
-			Command:   defendCommand,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   gameError,
+			Command: defendCommand,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -139,6 +141,7 @@ func (g *Game) DefendHandler(defendCommand DefendCommand, user *User) CommandRes
 			defendCommand.UserCard,
 			defendCommand.TargetCard,
 			user.Id,
+			gameToGameStateResponse(g, user),
 		),
 	)
 
@@ -147,9 +150,9 @@ func (g *Game) DefendHandler(defendCommand DefendCommand, user *User) CommandRes
 	}
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   defendCommand,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: defendCommand,
+		State:   gameToGameStateResponse(g, user),
 	}
 }
 
@@ -163,33 +166,33 @@ func (g *Game) TakeAllCardHandler(command Command, user *User) CommandResponse {
 
 	if gameError != ERROR_EMPTY {
 		return CommandResponse{
-			Error:     gameError,
-			Command:   command,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   gameError,
+			Command: command,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 
 	tableCards := tableCardsToCards(g.TableCards)
 	user.Cards = append(user.Cards, tableCards...)
 	g.TableCards = []TableCard{}
-	g.StopDefendTimer()
 
 	g.AddEventToBuffer(NewTakeAllCardsEvent(user.Id))
-	g.AddEventToBuffer(NewEndAttackEvent())
+
+	g.EndAttack(false)
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   command,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: command,
+		State:   gameToGameStateResponse(g, user),
 	}
 }
 
 func (g *Game) ReadyHandler(command Command, user *User) CommandResponse {
 	if contains(g.ReadyUsers, user.Id) {
 		return CommandResponse{
-			Error:     ERROR_USER_ALREADY_READY,
-			Command:   command,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   ERROR_USER_ALREADY_READY,
+			Command: command,
+			State:   gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -198,15 +201,15 @@ func (g *Game) ReadyHandler(command Command, user *User) CommandResponse {
 	if len(g.ReadyUsers) >= len(g.Users) {
 		g.IsStarted = true
 		g.StartAttackTimer()
-		g.AddEventToBuffer(NewStartGameEvent())
+		g.AddEventToBuffer(NewStartGameEvent(gameToGameStateResponse(g, user)))
 	} else {
 		g.AddEventToBuffer(NewReadyEvent(user.Id))
 	}
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   command,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: command,
+		State:   gameToGameStateResponse(g, user),
 	}
 }
 
@@ -219,23 +222,29 @@ func (g *Game) CheckAttackTimerHandler(command Command, user *User) CommandRespo
 
 	if gameError != ERROR_EMPTY {
 		return CommandResponse{
-			Error:     gameError,
-			Command:   command,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   gameError,
+			Command: command,
+			State:   gameToGameStateResponse(g, user),
 		}
+	}
+
+	if g.checkAttackTimer() == ERROR_ATTACK_TIME_OVER {
+		g.EndAttack(true)
 	}
 
 	if g.AttackTimerIsRunning {
 		timeEndAt := g.AttackTimerStartedAt.Add(time.Duration(g.Settings.TimeOver) * time.Second)
-		g.AddEventToBuffer(NewAttackTimerStateEvent(false, &timeEndAt))
+		g.AddEventToBuffer(
+			NewAttackTimerStateEvent(false, &timeEndAt),
+		)
 	} else {
 		g.AddEventToBuffer(NewAttackTimerStateEvent(true, nil))
 	}
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   command,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: command,
+		State:   gameToGameStateResponse(g, user),
 	}
 }
 
@@ -248,22 +257,28 @@ func (g *Game) CheckDefendTimerHandler(command Command, user *User) CommandRespo
 
 	if gameError != ERROR_EMPTY {
 		return CommandResponse{
-			Error:     gameError,
-			Command:   command,
-			GameState: gameToGameStateResponse(g, user),
+			Error:   gameError,
+			Command: command,
+			State:   gameToGameStateResponse(g, user),
 		}
+	}
+
+	if g.checkDefendTimer() == ERROR_DEFEND_TIME_OVER {
+		g.EndAttack(true)
 	}
 
 	if g.DefendTimerIsRunning {
 		timeEndAt := g.DefendTimerStartedAt.Add(time.Duration(g.Settings.TimeOver) * time.Second)
-		g.AddEventToBuffer(NewDefendTimerStateEvent(false, &timeEndAt))
+		g.AddEventToBuffer(
+			NewDefendTimerStateEvent(false, &timeEndAt),
+		)
 	} else {
-		g.AddEventToBuffer(NewAttackTimerStateEvent(true, nil))
+		g.AddEventToBuffer(NewDefendTimerStateEvent(true, nil))
 	}
 
 	return CommandResponse{
-		Error:     ERROR_EMPTY,
-		Command:   command,
-		GameState: gameToGameStateResponse(g, user),
+		Error:   ERROR_EMPTY,
+		Command: command,
+		State:   gameToGameStateResponse(g, user),
 	}
 }

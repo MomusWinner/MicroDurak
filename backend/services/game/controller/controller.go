@@ -55,8 +55,9 @@ func (gc GameController) ProcessQueues() {
 		}
 
 		for userId, userMessage := range messageByUser {
-			gc.SendMessageToGameManager(userId, userMessage)
+			gc.SendMessageToGameManager(game.Id, userId, userMessage)
 		}
+		core.SaveGame(game, gc.Redis)
 	})
 }
 
@@ -106,8 +107,12 @@ func (gc GameController) processQueue(processMessage func([]byte)) {
 	}()
 }
 
-func (gc GameController) SendMessageToGameManager(userId string, message []byte) error {
-	queue_name := "game-manager-" + userId
+func (gc GameController) SendMessageToGameManager(
+	gameId string,
+	userId string,
+	message []byte,
+) error {
+	queue_name := "game-manager-" + userId + "_" + gameId
 	exchange_name := "game-manager-ex"
 
 	_, err := gc.Channel.QueueDeclare(

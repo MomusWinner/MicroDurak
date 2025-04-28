@@ -25,11 +25,7 @@ const (
 )
 
 type GameEventContainer interface {
-	GetGameEvent() *GameEvent
-}
-
-type EventPack struct {
-	Events []GameEventContainer `json:"events"`
+	SetGameEventState(state GameStateResponse) GameEventContainer
 }
 
 type GameEvent struct {
@@ -94,7 +90,7 @@ func NewReadyEvent(userId string) ReadyEvent {
 	}
 }
 
-func NewStartGameEvent() StartGameEvent {
+func NewStartGameEvent(gameState GameStateResponse) StartGameEvent {
 	return StartGameEvent{
 		GameEvent: GameEvent{
 			Event: EVENT_START,
@@ -112,7 +108,12 @@ func NewAttackEvent(card Card, attackerId string) AttackEvent {
 	}
 }
 
-func NewDefendEvent(userCard Card, targetCard Card, defenderId string) DefendEvent {
+func NewDefendEvent(
+	userCard Card,
+	targetCard Card,
+	defenderId string,
+	gameState GameStateResponse,
+) DefendEvent {
 	return DefendEvent{
 		GameEvent: GameEvent{
 			Event: EVENT_DEFEND,
@@ -140,7 +141,10 @@ func NewEndAttackEvent() EndAttackEvent {
 	}
 }
 
-func NewAttackTimerStateEvent(completed bool, timerEndAt *time.Time) AttackTimerStateEvent {
+func NewAttackTimerStateEvent(
+	completed bool,
+	timerEndAt *time.Time,
+) AttackTimerStateEvent {
 	return AttackTimerStateEvent{
 		GameEvent: GameEvent{
 			Event: EVENT_END_ATTACK,
@@ -150,7 +154,10 @@ func NewAttackTimerStateEvent(completed bool, timerEndAt *time.Time) AttackTimer
 	}
 }
 
-func NewDefendTimerStateEvent(completed bool, timerEndAt *time.Time) DefendTimerStateEvent {
+func NewDefendTimerStateEvent(
+	completed bool,
+	timerEndAt *time.Time,
+) DefendTimerStateEvent {
 	return DefendTimerStateEvent{
 		GameEvent: GameEvent{
 			Event: EVENT_END_ATTACK,
@@ -160,7 +167,9 @@ func NewDefendTimerStateEvent(completed bool, timerEndAt *time.Time) DefendTimer
 	}
 }
 
-func NewEndGameEvent(result GameResult) EndGameEvent { // TODO: handle many users. Now handle only 2
+func NewEndGameEvent(
+	result GameResult,
+) EndGameEvent { // TODO: handle many users. Now handle only 2
 	return EndGameEvent{
 		GameEvent: GameEvent{
 			Event: EVENT_END_GAME,
@@ -169,12 +178,58 @@ func NewEndGameEvent(result GameResult) EndGameEvent { // TODO: handle many user
 	}
 }
 
-func (e GameEvent) GetGameEvent() *GameEvent             { return &e }
-func (e StartGameEvent) GetGameEvent() *GameEvent        { return &e.GameEvent }
-func (e ReadyEvent) GetGameEvent() *GameEvent            { return &e.GameEvent }
-func (e AttackEvent) GetGameEvent() *GameEvent           { return &e.GameEvent }
-func (e DefendEvent) GetGameEvent() *GameEvent           { return &e.GameEvent }
-func (e TakeAllCardsEvent) GetGameEvent() *GameEvent     { return &e.GameEvent }
-func (e EndAttackEvent) GetGameEvent() *GameEvent        { return &e.GameEvent }
-func (e AttackTimerStateEvent) GetGameEvent() *GameEvent { return &e.GameEvent }
-func (e DefendTimerStateEvent) GetGameEvent() *GameEvent { return &e.GameEvent }
+// func (e GameEvent) GetGameEvent() GameEvent             { return e }
+// func (e StartGameEvent) GetGameEvent() GameEvent        { return e.GameEvent }
+// func (e ReadyEvent) GetGameEvent() GameEvent            { return e.GameEvent }
+// func (e AttackEvent) GetGameEvent() GameEvent           { return e.GameEvent }
+// func (e DefendEvent) GetGameEvent() GameEvent           { return e.GameEvent }
+// func (e TakeAllCardsEvent) GetGameEvent() GameEvent     { return e.GameEvent }
+// func (e EndAttackEvent) GetGameEvent() GameEvent        { return e.GameEvent }
+// func (e AttackTimerStateEvent) GetGameEvent() GameEvent { return e.GameEvent }
+// func (e DefendTimerStateEvent) GetGameEvent() GameEvent { return e.GameEvent }
+
+func (e GameEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
+	e.State = state
+	return e
+}
+func (e StartGameEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
+	e.State = state
+	return e
+}
+
+func (e ReadyEvent) SetGameEventState(
+	state GameStateResponse,
+) GameEventContainer {
+	e.State = state
+	return e
+}
+
+func (e AttackEvent) SetGameEventState(
+	state GameStateResponse,
+) GameEventContainer {
+	e.State = state
+	return e
+}
+
+func (e DefendEvent) SetGameEventState(
+	state GameStateResponse,
+) GameEventContainer {
+	e.State = state
+	return e
+}
+func (e TakeAllCardsEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
+	e.State = state
+	return e
+}
+func (e EndAttackEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
+	e.State = state
+	return e
+}
+func (e AttackTimerStateEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
+	e.State = state
+	return e
+}
+func (e DefendTimerStateEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
+	e.State = state
+	return e
+}

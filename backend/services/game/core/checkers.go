@@ -64,7 +64,7 @@ func (g *Game) checkCardOnTable(suit int, rank int) string {
 }
 
 func (g *Game) checkCardGreater(suit int, rank int, tsuit int, trank int) string {
-	greaterThanTarget := CardGreater(suit, rank, tsuit, trank, g.Trump)
+	greaterThanTarget := CardGreater(suit, rank, tsuit, trank, g.Trump.Suit)
 	if !greaterThanTarget {
 		return ERROR_TARGET_CARD_GREATER_THEN_YOUR
 	}
