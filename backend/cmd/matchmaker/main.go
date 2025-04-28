@@ -51,9 +51,10 @@ func run(ctx context.Context, e *echo.Echo) error {
 	gameClient := game.NewGameClient(gameClientConn)
 
 	queueChan := make(chan types.MatchChan)
-	m := matchmaker.New(queueChan, config, redisClient, gameClient)
+	cancelChan := make(chan types.MatchCancel)
+	m := matchmaker.New(queueChan, cancelChan, config, redisClient, gameClient)
 
-	handlers.AddRoutes(e, queueChan, config, playerClient)
+	handlers.AddRoutes(e, queueChan, cancelChan, config, playerClient)
 
 	errChan := make(chan error, 2)
 

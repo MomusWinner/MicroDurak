@@ -14,7 +14,6 @@ import (
 const groupQueueKey = "matchmaking:queue:groups"
 const playerQueueKey = "matchmaking:queue:players"
 
-const playerMemFmt = "player:%s"
 const groupMemFmt = "group:%d"
 
 const groupsAmountKey = "matchmaking:groups:amount"
@@ -74,18 +73,8 @@ func ParseGroupId(groupString string) (int, error) {
 	return id, nil
 }
 
-func ParsePlayerId(playerString string) (string, error) {
-	sep := strings.Split(playerString, ":")
-	if len(sep) < 2 {
-		return "", newParseError("player id")
-	}
-
-	return sep[1], nil
-}
-
 func (pc *PlayerClient) GetPlayerScore(ctx context.Context, playerId string) (int, error) {
-	playerKey := fmt.Sprintf(playerMemFmt, playerId)
-	score, err := pc.client.ZScore(ctx, playerQueueKey, playerKey).Result()
+	score, err := pc.client.ZScore(ctx, playerQueueKey, playerId).Result()
 
 	if err != nil {
 		return 0, err
@@ -157,8 +146,7 @@ func (pc *PlayerClient) SetPlayerGroup(ctx context.Context, playerId string, gro
 func (pc *PlayerClient) AddPlayer(ctx context.Context, playerId string, score int) (RedisPlayer, error) {
 	player := RedisPlayer{StatusEmpty, playerId, 0}
 
-	playerKey := fmt.Sprintf(playerMemFmt, playerId)
-	err := pc.client.ZAdd(ctx, playerQueueKey, redis.Z{Score: float64(score), Member: playerKey}).Err()
+	err := pc.client.ZAdd(ctx, playerQueueKey, redis.Z{Score: float64(score), Member: playerId}).Err()
 	if err != nil {
 		return player, err
 	}
@@ -184,6 +172,40 @@ func (pc *PlayerClient) ListPlayersRange(ctx context.Context, low int, high int)
 	return player, nil
 }
 
+func (pc *PlayerClient) RemovePlayer(ctx context.Context, playerId string) error {
+	player, err := pc.GetPlayer(ctx, playerId)
+	if errors.Is(err, redis.Nil) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	switch player.Status {
+	case StatusEmpty:
+		return nil
+	case StatusSearch:
+		err := pc.SetPlayerStatus(ctx, playerId, StatusEmpty)
+		if err != nil {
+			return err
+		}
+
+		err = pc.client.ZRem(ctx, playerQueueKey, playerId).Err()
+		if err != nil {
+			return err
+		}
+		return nil
+	case StatusMoved:
+		err := pc.RemoveFromGroup(ctx, player.Gid, playerId)
+		if err != nil {
+			return err
+		}
+		pc.SetPlayerStatus(ctx, playerId, StatusEmpty)
+		return nil
+	}
+
+	return nil
+}
+
 func (pc *PlayerClient) AddGroup(ctx context.Context, players []redis.Z) error {
 	members := make([]any, 0, len(players))
 	for _, player := range players {
@@ -192,7 +214,7 @@ func (pc *PlayerClient) AddGroup(ctx context.Context, players []redis.Z) error {
 
 	err := pc.client.ZRem(ctx, playerQueueKey, members...).Err()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	scoreSum := 0
@@ -204,15 +226,12 @@ func (pc *PlayerClient) AddGroup(ctx context.Context, players []redis.Z) error {
 
 	count, err := pc.client.Incr(ctx, groupsAmountKey).Result()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	playerIds := make([]string, len(players))
 	for i, player := range players {
-		id, err := ParsePlayerId(player.Member.(string))
-		if err != nil {
-			return err
-		}
+		id := player.Member.(string)
 
 		playerIds[i] = id
 
@@ -221,15 +240,15 @@ func (pc *PlayerClient) AddGroup(ctx context.Context, players []redis.Z) error {
 	}
 
 	groupKey := fmt.Sprintf(groupKeyFmt, count)
-	err = pc.client.RPush(ctx, groupKey+groupMembersKey, playerIds).Err()
+	err = pc.client.SAdd(ctx, groupKey+groupMembersKey, playerIds).Err()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	queueGroupKey := fmt.Sprintf(groupMemFmt, count)
 	err = pc.client.ZAdd(ctx, groupQueueKey, redis.Z{Score: float64(scoreAvg), Member: queueGroupKey}).Err()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	return nil
@@ -281,7 +300,7 @@ func (pc *PlayerClient) AddToGroup(ctx context.Context, groupId int, player redi
 		return err
 	}
 
-	err = pc.client.RPush(ctx, groupKey+groupMembersKey, playerId).Err()
+	err = pc.client.SAdd(ctx, groupKey+groupMembersKey, playerId).Err()
 	if err != nil {
 		panic(err)
 	}
@@ -292,7 +311,7 @@ func (pc *PlayerClient) AddToGroup(ctx context.Context, groupId int, player redi
 func (pc *PlayerClient) GetGroupLen(ctx context.Context, groupId int) (int, error) {
 	groupKey := fmt.Sprintf(groupKeyFmt, groupId)
 
-	len, err := pc.client.LLen(ctx, groupKey+groupMembersKey).Result()
+	len, err := pc.client.SCard(ctx, groupKey+groupMembersKey).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -308,6 +327,14 @@ func (pc *PlayerClient) GetGrouppedPlayers(ctx context.Context, groupId int, amo
 	}
 
 	return players, err
+}
+
+func (pc *PlayerClient) RemoveFromGroup(ctx context.Context, groupId int, playerId string) error {
+	err := pc.client.SRem(ctx, groupQueueKey, playerId).Err()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (pc *PlayerClient) RemoveGroup(ctx context.Context, groupId int) error {

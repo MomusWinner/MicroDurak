@@ -13,11 +13,13 @@ import (
 func AddRoutes(
 	e *echo.Echo,
 	queue chan<- types.MatchChan,
+	cancel chan<- types.MatchCancel,
 	config *config.Config,
 	playersClient players.PlayersClient,
 ) {
 	h := Handler{
 		Queue:         queue,
+		Cancel:        cancel,
 		Config:        config,
 		PlayersClient: playersClient,
 	}

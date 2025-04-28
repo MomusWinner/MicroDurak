@@ -2,17 +2,38 @@ package types
 
 import "time"
 
-type ItemStatus = int
+type ItemStatus int
 
 const (
 	MatchPending ItemStatus = iota
-	MatchFound
+	MatchFoundGroup
+	MatchCreated
 	MatchError
 )
 
+func (s ItemStatus) String() string {
+	switch s {
+	case MatchPending:
+		return "pending"
+	case MatchCreated:
+		return "created"
+	case MatchFoundGroup:
+		return "found_group"
+	case MatchError:
+		return "error"
+	}
+	return "unknown"
+}
+
 type MatchResponse struct {
-	Status ItemStatus
-	RoomId string
+	Status    ItemStatus
+	RoomId    string
+	GroupSize int
+	Error     error
+}
+
+type MatchCancel struct {
+	PlayerId string
 }
 
 type MatchChan struct {

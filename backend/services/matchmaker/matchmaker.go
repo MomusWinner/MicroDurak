@@ -19,20 +19,23 @@ const groupSize = 2
 
 type Matchmaker struct {
 	queueChan      <-chan types.MatchChan
+	cancelChan     <-chan types.MatchCancel
 	queue          map[string]types.MatchChan
 	config         *config.Config
 	playerClient   *rc.PlayerClient
 	gameGRPCClient game.GameClient
 }
 
-func New(queueChan <-chan types.MatchChan,
+func New(
+	queueChan <-chan types.MatchChan,
+	cancelChan <-chan types.MatchCancel,
 	config *config.Config,
 	redisClient *redis.Client,
 	gameGRPCClient game.GameClient,
 ) *Matchmaker {
 	playerClient := rc.NewClient(redisClient)
 	queue := make(map[string]types.MatchChan)
-	return &Matchmaker{queueChan, queue, config, playerClient, gameGRPCClient}
+	return &Matchmaker{queueChan, cancelChan, queue, config, playerClient, gameGRPCClient}
 }
 
 func (m *Matchmaker) Start(
@@ -46,6 +49,12 @@ func (m *Matchmaker) Start(
 				return
 			case matchChan := <-m.queueChan:
 				m.queue[matchChan.PlayerId] = matchChan
+			case cancelRequest := <-m.cancelChan:
+				err := m.playerClient.RemovePlayer(ctx, cancelRequest.PlayerId)
+				if err != nil {
+					panic(err)
+				}
+				delete(m.queue, cancelRequest.PlayerId)
 			}
 		}
 	}()
@@ -81,6 +90,10 @@ func (m *Matchmaker) matchmake(ctx context.Context) error {
 
 		switch storedPlayer.Status {
 		case rc.StatusSearch:
+			player.ReturnChan <- types.MatchResponse{
+				Status: types.MatchPending,
+			}
+
 			err := m.handleSearch(ctx, player)
 			if errors.Is(err, types.ErrGroupNotFound) {
 				continue
@@ -88,6 +101,10 @@ func (m *Matchmaker) matchmake(ctx context.Context) error {
 				return err
 			}
 		case rc.StatusMoved:
+			player.ReturnChan <- types.MatchResponse{
+				Status: types.MatchFoundGroup,
+			}
+
 			err := m.handleMoved(ctx, storedPlayer)
 			var gidError types.ErrGroupTooSmall
 			if errors.As(err, &gidError) {
@@ -177,7 +194,7 @@ func (m *Matchmaker) handleMoved(
 	}
 
 	response := types.MatchResponse{
-		Status: types.MatchFound,
+		Status: types.MatchCreated,
 		RoomId: gameId.GameId,
 	}
 

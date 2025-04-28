@@ -17,24 +17,20 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type MatchStatus string
-
-const (
-	MatchStatusSearching = "searching"
-	MatchStatusFound     = "found"
-)
-
 var (
 	upgrader = websocket.Upgrader{}
 )
 
 type FindMatchResponse struct {
-	Status MatchStatus `json:"status"`
-	GameId string      `json:"game_id,omitempty"`
+	// MatchStatus string
+	Status    string `json:"status"`
+	GameId    string `json:"game_id,omitempty"`
+	GroupSize int    `json:"group_size,omitzero"`
 }
 
 type Handler struct {
 	Queue         chan<- types.MatchChan
+	Cancel        chan<- types.MatchCancel
 	Config        *config.Config
 	PlayersClient players.PlayersClient
 }
@@ -88,28 +84,27 @@ func (h *Handler) FindMatch(c echo.Context) error {
 	}
 	defer ws.Close()
 
+	doneChan := make(chan bool, 1)
+	closeHandler := ws.CloseHandler()
+	ws.SetCloseHandler(func(code int, text string) error {
+		select {
+		case doneChan <- true:
+		default:
+		}
+		err := closeHandler(code, text)
+		return err
+	})
+
 	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
-
-		for {
+		defer func() {
 			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				resp := FindMatchResponse{
-					Status: MatchStatusSearching,
-					GameId: "",
-				}
-
-				respString, _ := json.Marshal(resp)
-				err := ws.WriteMessage(websocket.TextMessage, []byte(respString))
-				if err != nil {
-					metrics.WebsocketWriteErrors.Inc()
-					c.Logger().Error(err)
-				}
-
-				ws.ReadMessage()
+			case doneChan <- true:
+			default:
+			}
+		}()
+		for {
+			if _, _, err := ws.ReadMessage(); err != nil {
+				break
 			}
 		}
 	}()
@@ -125,21 +120,56 @@ func (h *Handler) FindMatch(c echo.Context) error {
 		ReturnChan: returnChan,
 	}
 
-	roomId := <-returnChan
+	for {
+		select {
+		case matchReturn := <-returnChan:
+			switch matchReturn.Status {
+			case types.MatchCreated:
+				roomId := matchReturn.RoomId
+				resp := FindMatchResponse{
+					Status: types.MatchCreated.String(),
+					GameId: roomId,
+				}
 
-	resp := FindMatchResponse{
-		Status: MatchStatusFound,
-		GameId: roomId.RoomId,
+				respString, _ := json.Marshal(resp)
+				ws.WriteMessage(websocket.TextMessage, respString)
+
+				closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Connection closed")
+				err = ws.WriteControl(websocket.CloseMessage, closeMsg, time.Now().Add(time.Second))
+				if err != nil {
+					return err
+				}
+
+				return nil
+			case types.MatchError:
+				status := FindMatchResponse{
+					Status: matchReturn.Status.String(),
+				}
+
+				stautsString, _ := json.Marshal(status)
+
+				ws.WriteMessage(websocket.TextMessage, stautsString)
+				if err != nil {
+					return err
+				}
+
+				return matchReturn.Error
+			default:
+				status := FindMatchResponse{
+					Status:    matchReturn.Status.String(),
+					GroupSize: matchReturn.GroupSize,
+				}
+
+				stautsString, _ := json.Marshal(status)
+
+				err := ws.WriteMessage(websocket.TextMessage, stautsString)
+				if err != nil {
+					return err
+				}
+			}
+		case <-doneChan:
+			h.Cancel <- types.MatchCancel{PlayerId: playerId}
+			return nil
+		}
 	}
-
-	respString, _ := json.Marshal(resp)
-	ws.WriteMessage(websocket.TextMessage, respString)
-
-	closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Connection closed")
-	err = ws.WriteControl(websocket.CloseMessage, closeMsg, time.Now().Add(time.Second))
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
