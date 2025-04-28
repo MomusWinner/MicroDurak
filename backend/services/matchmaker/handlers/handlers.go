@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -61,8 +60,7 @@ func (h *Handler) FindMatch(c echo.Context) error {
 		).Inc()
 	}()
 
-	ctx, cancel := context.WithCancel(c.Request().Context())
-	defer cancel()
+	ctx := c.Request().Context()
 
 	playerId, ok := c.Get("playerId").(string)
 	if !ok {
