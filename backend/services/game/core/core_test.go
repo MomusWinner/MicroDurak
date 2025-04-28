@@ -8,32 +8,8 @@ import (
 )
 
 func checkGameEvents(game *Game, events ...string) error { // TODO
-	// error_string := ""
-	// error_string += "\nTARGET EVENTS\n"
-	// for i, event := range events {
-	// 	error_string += fmt.Sprintf("%d| %s\n", i, event)
-	// }
-	// error_string += "\nGAME EVENTS\n"
-	// for i, event := range game.GameEventBuffer {
-	// 	gameEvent, _ := event.(GameEventContainer)
-	// 	error_string += fmt.Sprintf("%d| %s\n", i, gameEvent.GetGameEvent().Event)
-	// }
-	//
-	// if len(game.GameEventBuffer) != len(events) {
-	// 	return errors.New(
-	// 		"\nTarget events length and game evets length is different\n" + error_string,
-	// 	)
-	// }
-	// for i, event := range events {
-	//
-	// 	gameEvent, _ := game.GameEventBuffer[i].(GameEventContainer)
-	// 	if gameEvent.GetGameEvent().Event != event {
-	// 		return errors.New(error_string)
-	// 	}
-	// }
-	//
-	// game.GameEventBuffer = []GameEventContainer{}
-	//
+	game.GameEventBuffer = []GameEventContainer{}
+
 	return nil
 }
 
