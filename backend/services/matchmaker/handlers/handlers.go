@@ -50,12 +50,14 @@ func (h *Handler) FindMatch(c echo.Context) error {
 			statusCode = http.StatusInternalServerError
 		}
 
-		metrics.SearchDuration.Observe(duration)
+		metrics.SearchDuration.WithLabelValues(h.Config.PodName, h.Config.Namespace).Observe(duration)
 
 		metrics.HTTPRequestsTotal.WithLabelValues(
 			c.Request().Method,
 			c.Path(),
 			strconv.Itoa(statusCode),
+			h.Config.PodName,
+			h.Config.Namespace,
 		).Inc()
 	}()
 
@@ -79,7 +81,7 @@ func (h *Handler) FindMatch(c echo.Context) error {
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
-		metrics.WebsocketUpgradeErrors.Inc()
+		metrics.WebsocketUpgradeErrors.WithLabelValues(h.Config.PodName, h.Config.Namespace).Inc()
 		return err
 	}
 	defer ws.Close()
@@ -109,8 +111,8 @@ func (h *Handler) FindMatch(c echo.Context) error {
 		}
 	}()
 
-	metrics.PlayersSearching.Inc()
-	defer metrics.PlayersSearching.Dec()
+	metrics.PlayersSearching.WithLabelValues(h.Config.PodName, h.Config.Namespace).Inc()
+	defer metrics.PlayersSearching.WithLabelValues(h.Config.PodName, h.Config.Namespace).Dec()
 
 	returnChan := make(chan types.MatchResponse)
 	h.Queue <- types.MatchChan{

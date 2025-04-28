@@ -10,6 +10,8 @@ type Config struct {
 	RedisURL   string `help:"Redis connection URL"                    env:"REDIS_URL" required:"true"`
 	PlayersURL string `help:"URL pointing to the Players Service"  env:"PLAYERS_URL" required:"true"`
 	GameURL    string `help:"URL pointing to the Game Service"  env:"GAME_URL" required:"true"`
+	PodName    string `help:"K8s pod name" env:"POD_NAME" default:"unknown"`
+	Namespace  string `help:"K8s namespace" env:"NAMESPACE" default:"unknown"`
 	LogLevel   string `help:"Log level (debug, info, warn, error)"    env:"LOG_LEVEL" default:"info"`
 }
 

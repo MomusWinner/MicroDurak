@@ -5,6 +5,7 @@ import (
 
 	"github.com/MommusWinner/MicroDurak/lib/jwt"
 	"github.com/MommusWinner/MicroDurak/services/game-manager/config"
+	"github.com/MommusWinner/MicroDurak/services/game-manager/metrics"
 	"github.com/MommusWinner/MicroDurak/services/game-manager/publisher"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -37,14 +38,12 @@ func (h Handler) Connect(c echo.Context) error {
 	}
 	defer ws.Close()
 
+	metrics.PlayersConnected.WithLabelValues(h.Config.PodName, h.Config.Namespace).Inc()
+	defer metrics.PlayersConnected.WithLabelValues(h.Config.PodName, h.Config.Namespace).Dec()
+
 	endRead := make(chan bool)
 
 	for {
-		// Write
-		if err != nil {
-			c.Logger().Error(err)
-		}
-
 		h.processQueue(userId, func(message []byte) {
 			ws.WriteMessage(websocket.TextMessage, message)
 		})
