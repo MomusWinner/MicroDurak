@@ -6,7 +6,7 @@ WORKDIR /micro-durak/$SERVICE_NAME
 
 COPY ./cmd/$SERVICE_NAME ./cmd/$SERVICE_NAME
 COPY ./services/$SERVICE_NAME ./services/$SERVICE_NAME
-COPY ./vendor* ./
+COPY ./vendor* ./vendor/
 COPY ./lib ./lib
 COPY ./internal ./internal
 COPY ./go.mod ./go.sum ./
