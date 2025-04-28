@@ -1,19 +1,28 @@
 local save = require("main.save_manager")
 local p = require("main.param")
+local s = require("main.game_state")
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
 
 	save.init()
+	s.skip_auth = sys.get_config_string("bootstrap.skip_auth") == "true"
+	s.simulate_save = sys.get_config_string("bootstrap.simulate_save") == "true"
+	print("SKIP_AUTH: " .. tostring(s.skip_auth))
+	print("SIMULATE_SAVE: " .. tostring(s.simulate_save))
 
-	local token = save.get("token")
+	if s.skip_auth then
+		return
+	end
+
+	local token = save.get().token
+
 	if token then
 		print("Token: " .. token)
 	else
 		print("Token is null")
 	end
 
-	-- msg.post(loader, "load_registration")
 	if token then
 		msg.post(p.loader, "load_start_menu")
 	else
@@ -31,4 +40,21 @@ function on_message(self, message_id, message, sender) end
 
 function on_input(self, action_id, action)
 	save.on_input(action_id, action)
+	if s.skip_auth then
+		if action_id == hash("key_j") and action.pressed then
+			local settings = save.get()
+			pprint(settings)
+			settings.user_id = sys.get_config_string("bootstrap.test_first_user_id")
+			settings.token = sys.get_config_string("bootstrap.test_first_user_token")
+			save.set(settings)
+			msg.post(p.loader, "load_start_menu")
+		end
+		if action_id == hash("key_k") and action.pressed then
+			local settings = save.get()
+			settings.user_id = sys.get_config_string("bootstrap.test_second_user_id")
+			settings.token = sys.get_config_string("bootstrap.test_second_user_token")
+			save.set(settings)
+			msg.post(p.loader, "load_start_menu")
+		end
+	end
 end

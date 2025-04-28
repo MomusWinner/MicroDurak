@@ -1,2 +1,65 @@
+script: "/main/gui/game.gui_script"
+fonts {
+  name: "Rubik"
+  font: "/assets/fonts/Rubik.font"
+}
+fonts {
+  name: "RubikBold"
+  font: "/assets/fonts/RubikBold.font"
+}
+nodes {
+  position {
+    x: 1109.0
+    y: 588.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "00:00"
+  font: "RubikBold"
+  id: "opponent_timer"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 1097.0
+    y: 53.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "00:00"
+  font: "RubikBold"
+  id: "my_timer"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 823.0
+    y: 139.0
+  }
+  type: TYPE_TEMPLATE
+  id: "action_button"
+  inherit_alpha: true
+  template: "/main/gui/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "action_button/box"
+  parent: "action_button"
+  overridden_fields: 45
+  template_node_child: true
+  enabled: false
+}
+nodes {
+  type: TYPE_TEXT
+  id: "action_button/text"
+  parent: "action_button/box"
+  template_node_child: true
+}
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT

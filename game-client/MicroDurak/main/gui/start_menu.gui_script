@@ -5,7 +5,7 @@ local name_button_start = "button_start"
 
 function on_click_start_button()
 	print("Click")
-	msg.post(p.loader, "load_game", {})
+	msg.post(p.loader, "load_match", {})
 end
 
 function init(self)

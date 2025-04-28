@@ -151,7 +151,10 @@ function login(self)
 				return
 			end
 			print("token: " .. rbody.token)
-			save.set("token", "test")
+			local settings = save.get()
+			settings.token = rbody.token
+			settings.user_id = rbody.player_id
+			save.set(settings)
 			msg.post(p.loader, "load_start_menu")
 		elseif response.status == 403 then
 			self.login_error:set_to("Неправильная почта или пароль")
@@ -190,7 +193,10 @@ function register(self)
 					return
 				end
 				print("token: " .. rbody.token)
-				save.set("token", "test")
+				local settings = save.get()
+				settings.token = rbody.token
+				settings.user_id = rbody.player_id
+				save.set(settings)
 				msg.post(p.loader, "load_start_menu")
 			else
 				print("STATUSCODE: " .. response.status)

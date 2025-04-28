@@ -1,16 +1,32 @@
 name: "game"
 scale_along_z: 0
 embedded_instances {
-  id: "game_manager"
+  id: "core"
   data: "components {\n"
-  "  id: \"game_manager\"\n"
-  "  component: \"/main/game_manager.script\"\n"
+  "  id: \"core\"\n"
+  "  component: \"/main/game/core.script\"\n"
   "}\n"
   "embedded_components {\n"
   "  id: \"card_factory\"\n"
   "  type: \"factory\"\n"
   "  data: \"prototype: \\\"/main/card/card.go\\\"\\n"
   "\"\n"
+  "}\n"
+  ""
+}
+embedded_instances {
+  id: "debug_gui"
+  data: "components {\n"
+  "  id: \"debug\"\n"
+  "  component: \"/main/gui/debug.gui\"\n"
+  "}\n"
+  ""
+}
+embedded_instances {
+  id: "gui"
+  data: "components {\n"
+  "  id: \"game\"\n"
+  "  component: \"/main/gui/game.gui\"\n"
   "}\n"
   ""
 }
