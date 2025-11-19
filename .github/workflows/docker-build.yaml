@@ -24,7 +24,7 @@ jobs:
         - image: ghcr.io/momuswinner/players
           service: players
         - image: ghcr.io/momuswinner/migrate
-          dockerfile: backend/Dockerfile.goose
+          dockerfile: Dockerfile.goose
           service: migrate
     permissions:
       contents: read
@@ -53,10 +53,10 @@ jobs:
       - name: Build and Push Images
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: .
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
-          file: ${{ matrix.dockerfile != '' && matrix.dockerfile || 'backend/Dockerfile.service' }}
+          file: ${{ matrix.dockerfile != '' && matrix.dockerfile || 'Dockerfile.service' }}
