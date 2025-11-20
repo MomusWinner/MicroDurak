@@ -6,8 +6,8 @@ const (
 	ACTION_DEFEND             = "ACTION_DEFEND"
 	ACTION_END_ATTACK         = "ACTION_END_ATTACK"
 	ACTION_TAKE_ALL_CARDS     = "ACTION_TAKE_ALL_CARDS"
-	ACTION_CHECK_ATTACK_TIMER = "ACTION_CHECK_ATTACK_TIMER"
-	ACTION_CHECK_DEFEND_TIMER = "ACTION_CHECK_DEFEND_TIMER"
+	ACTION_CHECK_ATTACK_TIMER = "ACTION_CHECK_ATTACK_TIMER" // TODO:
+	ACTION_CHECK_DEFEND_TIMER = "ACTION_CHECK_DEFEND_TIMER" // TODO:
 )
 
 const (
@@ -33,7 +33,8 @@ const (
 )
 
 type MessagePack struct {
-	Messages []interface{} `json:"messages"`
+	Messages  []interface{}     `json:"messages"`
+	GameState GameStateResponse `json:"game_state"`
 }
 
 func gameToGameStateResponse(game *Game, targetUser *User) GameStateResponse {
@@ -43,7 +44,7 @@ func gameToGameStateResponse(game *Game, targetUser *User) GameStateResponse {
 		AttackingId: game.AttackingId,
 		DefendingId: game.DefendingId,
 		DeckLength:  len(game.Deck),
-		Trump:       game.Trump,
+		TrumpSuit:   game.TrumpSuit,
 		TableCards:  game.TableCards,
 	}
 }
@@ -72,7 +73,7 @@ type GameStateResponse struct {
 	AttackingId string         `json:"attacking_id"`
 	DefendingId string         `json:"defending_id"`
 	DeckLength  int            `json:"deck_length"`
-	Trump       Card           `json:"trump"`
+	TrumpSuit   int            `json:"trump_suit"`
 	TableCards  []TableCard    `json:"table_cards"`
 }
 

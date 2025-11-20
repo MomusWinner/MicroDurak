@@ -3,6 +3,7 @@ package core
 import "time"
 
 const (
+	EVENT_NONE                       = "EVENT_NONE"
 	EVENT_START                      = "EVENT_START"
 	EVENT_READY                      = "EVENT_READY"
 	EVENT_ATTACK                     = "EVENT_ATTACK"
@@ -25,12 +26,12 @@ const (
 )
 
 type GameEventContainer interface {
-	SetGameEventState(state GameStateResponse) GameEventContainer
 }
 
+// type GameEven
+
 type GameEvent struct {
-	Event string            `json:"event"`
-	State GameStateResponse `json:"state"`
+	Event string `json:"event"`
 }
 
 type StartGameEvent struct {
@@ -38,21 +39,21 @@ type StartGameEvent struct {
 }
 
 type ReadyEvent struct {
-	UserId string `json:"user_id"`
 	GameEvent
+	UserId string `json:"user_id"`
 }
 
 type AttackEvent struct {
+	GameEvent
 	Card       Card   `json:"card"`
 	AttackerId string `json:"attacker_id"`
-	GameEvent
 }
 
 type DefendEvent struct {
+	GameEvent
 	TargetCard Card   `json:"target_card"`
 	UserCard   Card   `json:"user_card"`
 	DefenderId string `json:"defender_id"`
-	GameEvent
 }
 
 type TakeAllCardsEvent struct {
@@ -178,58 +179,27 @@ func NewEndGameEvent(
 	}
 }
 
-// func (e GameEvent) GetGameEvent() GameEvent             { return e }
-// func (e StartGameEvent) GetGameEvent() GameEvent        { return e.GameEvent }
-// func (e ReadyEvent) GetGameEvent() GameEvent            { return e.GameEvent }
-// func (e AttackEvent) GetGameEvent() GameEvent           { return e.GameEvent }
-// func (e DefendEvent) GetGameEvent() GameEvent           { return e.GameEvent }
-// func (e TakeAllCardsEvent) GetGameEvent() GameEvent     { return e.GameEvent }
-// func (e EndAttackEvent) GetGameEvent() GameEvent        { return e.GameEvent }
-// func (e AttackTimerStateEvent) GetGameEvent() GameEvent { return e.GameEvent }
-// func (e DefendTimerStateEvent) GetGameEvent() GameEvent { return e.GameEvent }
+func GameEventToType(e GameEventContainer) string {
+	switch event := e.(type) {
+	case ReadyEvent:
+		return event.Event
+	case StartGameEvent:
+		return event.Event
+	case AttackEvent:
+		return event.Event
+	case DefendEvent:
+		return event.Event
+	case EndAttackEvent:
+		return event.Event
+	case TakeAllCardsEvent:
+		return event.Event
+	case EndGameEvent:
+		return event.Event
+	case AttackTimerStateEvent:
+		return event.Event
+	case DefendTimerStateEvent:
+		return event.Event
+	}
 
-func (e GameEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
-	e.State = state
-	return e
-}
-func (e StartGameEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
-	e.State = state
-	return e
-}
-
-func (e ReadyEvent) SetGameEventState(
-	state GameStateResponse,
-) GameEventContainer {
-	e.State = state
-	return e
-}
-
-func (e AttackEvent) SetGameEventState(
-	state GameStateResponse,
-) GameEventContainer {
-	e.State = state
-	return e
-}
-
-func (e DefendEvent) SetGameEventState(
-	state GameStateResponse,
-) GameEventContainer {
-	e.State = state
-	return e
-}
-func (e TakeAllCardsEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
-	e.State = state
-	return e
-}
-func (e EndAttackEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
-	e.State = state
-	return e
-}
-func (e AttackTimerStateEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
-	e.State = state
-	return e
-}
-func (e DefendTimerStateEvent) SetGameEventState(state GameStateResponse) GameEventContainer {
-	e.State = state
-	return e
+	return EVENT_NONE
 }

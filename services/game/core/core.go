@@ -28,18 +28,29 @@ type Card struct {
 	Rank int `json:"rank"`
 }
 
+type UserStatus int
+
+const (
+	Wait UserStatus = iota
+	Attack
+	Deffend
+)
+
 type User struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Cards      []Card `json:"cards"`
-	TakenCards []Card `json:"taken_cards"`
+	Id         string     `json:"id"`
+	Place      int        `json:"place"`
+	Status     UserStatus `json:"status"`
+	Name       string     `json:"name"`
+	Cards      []Card     `json:"cards"`
+	TakenCards []Card     `json:"taken_cards"`
 }
 
 type UserResponse struct {
-	Id               string `json:"id"`
-	Name             string `json:"name"`
-	CardLength       int    `json:"card_length"`
-	TakenCardsLength int    `json:"taken_cards_length"`
+	Id               string     `json:"id"`
+	Status           UserStatus `json:"status"`
+	Name             string     `json:"name"`
+	CardLength       int        `json:"card_length"`
+	TakenCardsLength int        `json:"taken_cards_length"`
 }
 
 type TableCard struct {
@@ -54,7 +65,7 @@ type Game struct {
 	AttackingId     string        `json:"attacking_id"`
 	DefendingId     string        `json:"defending_id"`
 	Deck            []Card        `json:"deck"`
-	Trump           Card          `json:"trump"`
+	TrumpSuit       int           `json:"trump_suit"` // TODO: remove
 	TableCards      []TableCard   `json:"table_cards"`
 	EndAttackUserId []string      `json:"end_attack_user_id"`
 	ReadyUsers      []string      `json:"ready_users"`
@@ -62,14 +73,16 @@ type Game struct {
 
 	AttackTimerIsRunning bool      `json:"attack_timer_is_running"`
 	AttackTimerStartedAt time.Time `json:"attack_timer_started_at"`
+	AttackTimerEndedAt   time.Time `json:"attack_timer_ended_at"`
 
 	DefendTimerIsRunning bool      `json:"defend_timer_is_running"`
 	DefendTimerStartedAt time.Time `json:"defend_timer_started_at"`
+	DefendTimerEndedAt   time.Time `json:"defend_timer_ended_at"`
 
 	GameEventBuffer []GameEventContainer `json:"game_event_buffer"`
 }
 
-func CreateNewGameAndSaveInRedis(redis *redis.Client, userIds []string) (*Game, error) {
+func CreateNewGameAndSaveInRedis(redis *redis.Client, userIds []string) (*Game, error) { // TODO: move to handler layer
 	game, err := CreateNewGame(userIds)
 
 	if err != nil {
@@ -91,7 +104,7 @@ func CreateNewGameAndSaveInRedis(redis *redis.Client, userIds []string) (*Game, 
 	return game, nil
 }
 
-func SaveGame(game *Game, redis *redis.Client) {
+func SaveGame(game *Game, redis *redis.Client) { // TODO: move to handler layer
 	result, _ := json.Marshal(game)
 	log.Print(string(result))
 
@@ -108,36 +121,40 @@ func SaveGame(game *Game, redis *redis.Client) {
 func CreateNewGame(userIds []string) (*Game, error) {
 	id := uuid.New()
 	deck := generateDeck()
+	trum_suit := deck[0].Suit
 
-	// TODO: The last cards will not be an ace.
 	shackeCards(deck)
 	users := make([]*User, len(userIds))
-	for i := 0; i < len(users); i++ {
-		userCards := deck[:6]
-		deck = deck[6:]
+	for i := range users {
+		userCards := deck[len(deck)-6:]
+		deck = deck[:len(deck)-6]
 
 		users[i] = &User{
-			Id:    userIds[i],
-			Name:  "",
-			Cards: userCards,
+			Id:     userIds[i],
+			Place:  i,
+			Status: Wait,
+			Name:   "",
+			Cards:  userCards,
 		}
+	}
+
+	game := Game{
+		Id:         id.String(),
+		Settings:   &DefaultGameSettings,
+		Users:      users,
+		Deck:       deck,
+		TrumpSuit:  trum_suit,
+		TableCards: []TableCard{},
 	}
 
 	// select first attacking and defending user
 	attacking_i := rand.IntN(len(users))
-	attacking_id := users[attacking_i].Id
-	defending, _ := nextUser(users, attacking_id)
-
-	game := Game{
-		Id:          id.String(),
-		Settings:    &DefaultGameSettings,
-		Users:       users,
-		AttackingId: attacking_id,
-		DefendingId: defending.Id,
-		Deck:        deck,
-		Trump:       deck[len(deck)-1],
-		TableCards:  []TableCard{},
+	game.AttackingId = users[attacking_i].Id
+	defending, err := game.nextUser(game.AttackingId)
+	if err != nil {
+		// TODO: log
 	}
+	game.DefendingId = defending.Id
 
 	return &game, nil
 }
@@ -170,7 +187,7 @@ func (g *Game) HandleMessage(msg []byte) (map[string][]byte, error) {
 		return nil, err
 	}
 
-	user, err := getUserById(g.Users, command.UserId)
+	user, err := g.getUserById(command.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +243,7 @@ func (g *Game) StopDefendTimer() {
 }
 
 func (g *Game) removeUserCard(userId string, suit int, rank int) error {
-	user, err := getUserById(g.Users, userId)
+	user, err := g.getUserById(userId)
 	if err != nil {
 		return err
 	}
@@ -244,7 +261,7 @@ func (g *Game) removeUserCard(userId string, suit int, rank int) error {
 func (g *Game) beatOffCard(suit int, rank int, targetCard Card) bool {
 	for i := 0; i < len(g.TableCards); i++ {
 		if g.TableCards[i].Suit == targetCard.Suit && g.TableCards[i].Rank == targetCard.Rank {
-			if CardGreater(suit, rank, targetCard.Suit, targetCard.Rank, g.Trump.Suit) {
+			if CardGreater(suit, rank, targetCard.Suit, targetCard.Rank, g.TrumpSuit) {
 				g.TableCards[i].BeatOff = &Card{Suit: suit, Rank: rank}
 				return true
 			} else {
@@ -284,15 +301,16 @@ func (g *Game) CreateMessangePackByUserFromEventBuffer() map[string]MessagePack 
 		eventPackEvents := []interface{}{}
 		for _, event := range events {
 			// fmt.Println(event)
-			newEvent := event.SetGameEventState(gameToGameStateResponse(g, user))
-			estring, _ := json.Marshal(newEvent)
+			// newEvent := event.SetGameEventState(gameToGameStateResponse(g, user))
+			estring, _ := json.Marshal(event)
 			fmt.Println("---------------------" + user.Id)
 			fmt.Println(string(estring))
 			fmt.Println("---------------------")
-			eventPackEvents = append(eventPackEvents, newEvent)
+			eventPackEvents = append(eventPackEvents, event)
 		}
 		result[user.Id] = MessagePack{
-			Messages: eventPackEvents,
+			Messages:  eventPackEvents,
+			GameState: gameToGameStateResponse(g, user),
 		}
 	}
 
@@ -324,25 +342,24 @@ func shackeCards(cards []Card) {
 	})
 }
 
-func nextUser(users []*User, userId string) (*User, error) {
-	length := len(users)
-	for i := 0; i < length; i++ {
-		if users[i].Id == userId {
-			if i == length-1 {
-				return users[0], nil
-			} else {
-				return users[i+1], nil
-			}
-		}
+func (g *Game) nextUser(userId string) (*User, error) {
+	user, err := g.getUserById(userId)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, errors.New("User not found")
+	nextPlace := user.Place + 1
+	if nextPlace >= len(g.Users) {
+		nextPlace = 0
+	}
+
+	return g.Users[nextPlace], nil
 }
 
-func getUserById(users []*User, userId string) (*User, error) {
-	for i := 0; i < len(users); i++ {
-		if users[i].Id == userId {
-			return users[i], nil
+func (g *Game) getUserById(userId string) (*User, error) {
+	for i := 0; i < len(g.Users); i++ {
+		if g.Users[i].Id == userId {
+			return g.Users[i], nil
 		}
 	}
 
@@ -447,10 +464,10 @@ func (g *Game) AddEventToBuffer(event GameEventContainer) {
 }
 
 func (g *Game) EndAttack(switch_users bool) {
-	newDefending, _ := nextUser(g.Users, g.DefendingId)
+	newDefending, _ := g.nextUser(g.DefendingId)
 
-	attacker, _ := getUserById(g.Users, g.AttackingId)
-	defender, _ := getUserById(g.Users, g.DefendingId)
+	attacker, _ := g.getUserById(g.AttackingId)
+	defender, _ := g.getUserById(g.DefendingId)
 
 	otherUsers := []*User{}
 	copy(otherUsers, g.Users)
@@ -498,8 +515,8 @@ func (g *Game) TakeCardFromDeck() (Card, error) {
 		return Card{}, errors.New("Deck is empty")
 	}
 
-	card := g.Deck[0]
-	g.Deck = g.Deck[1:]
+	card := g.Deck[len(g.Deck)-1]
+	g.Deck = g.Deck[:len(g.Deck)-1]
 
 	return card, nil
 }

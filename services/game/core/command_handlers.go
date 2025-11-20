@@ -23,8 +23,8 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 
 	g.EndAttackUserId = append(g.EndAttackUserId, command.UserId)
 
-	defendUser, _ := getUserById(g.Users, g.DefendingId)
-	attackUser, _ := getUserById(g.Users, g.AttackingId)
+	defendUser, _ := g.getUserById(g.DefendingId)
+	attackUser, _ := g.getUserById(g.AttackingId)
 
 	if len(g.EndAttackUserId) == len(g.Users)-1 {
 		g.EndAttack(true)
@@ -117,7 +117,7 @@ func (g *Game) DefendHandler(defendCommand DefendCommand, user *User) CommandRes
 		},
 	)
 
-	if gameError == ERROR_DEFEND_TIME_OVER {
+	if gameError == ERROR_DEFEND_TIME_OVER { // TODO: remove this stuff
 		g.AddEventToBuffer(NewEndAttackEvent())
 	}
 

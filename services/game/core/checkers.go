@@ -64,7 +64,7 @@ func (g *Game) checkCardOnTable(suit int, rank int) string {
 }
 
 func (g *Game) checkCardGreater(suit int, rank int, tsuit int, trank int) string {
-	greaterThanTarget := CardGreater(suit, rank, tsuit, trank, g.Trump.Suit)
+	greaterThanTarget := CardGreater(suit, rank, tsuit, trank, g.TrumpSuit)
 	if !greaterThanTarget {
 		return ERROR_TARGET_CARD_GREATER_THEN_YOUR
 	}
@@ -105,7 +105,7 @@ func (g *Game) checkTableHoldsOnlySixCards() string {
 }
 
 func (g *Game) checkDefenderHasCards() string {
-	defender, _ := getUserById(g.Users, g.DefendingId)
+	defender, _ := g.getUserById(g.DefendingId)
 	if len(defender.Cards) <= 0 {
 		return ERROR_DEFENDER_NO_CARDS
 	}

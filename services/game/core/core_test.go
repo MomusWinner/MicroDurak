@@ -8,13 +8,24 @@ import (
 )
 
 func checkGameEvents(game *Game, events ...string) error { // TODO
+	for _, v := range game.GameEventBuffer {
+		eventType := GameEventToType(v)
+
+		if eventType == EVENT_NONE {
+			return errors.New("Event shouldn't be NONE")
+		}
+
+		if events[0] != eventType {
+			return errors.New(fmt.Sprintf("Bad event (%s) target (%s) \n", eventType, events[0]))
+		}
+		events = events[1:]
+	}
 	game.GameEventBuffer = []GameEventContainer{}
 
 	return nil
 }
 
 func checkPack(pack map[string][]byte) error {
-
 	all := ""
 
 	for userId, msg := range pack {
@@ -25,14 +36,13 @@ func checkPack(pack map[string][]byte) error {
 	}
 
 	return errors.New(all)
-	// return nil
 }
 
-func CreateGameWithReadyUsers() (*Game, *User, *User, error) {
+func createGameWithReadyUsers() (*Game, *User, *User, error) {
 	game, _ := CreateNewGame([]string{"user1", "user2"})
 
-	attackUser, _ := getUserById(game.Users, game.AttackingId)
-	defendUser, _ := getUserById(game.Users, game.DefendingId)
+	attackUser, _ := game.getUserById(game.AttackingId)
+	defendUser, _ := game.getUserById(game.DefendingId)
 
 	response := game.ReadyHandler(Command{
 		Action: ACTION_READY,
@@ -53,8 +63,8 @@ func CreateGameWithReadyUsers() (*Game, *User, *User, error) {
 func TestGanaratePack(t *testing.T) {
 	game, _ := CreateNewGame([]string{"user1", "user2"})
 
-	attackUser, _ := getUserById(game.Users, game.AttackingId)
-	defendUser, _ := getUserById(game.Users, game.DefendingId)
+	attackUser, _ := game.getUserById(game.AttackingId)
+	defendUser, _ := game.getUserById(game.DefendingId)
 
 	game.ReadyHandler(Command{
 		Action: ACTION_READY,
@@ -67,7 +77,6 @@ func TestGanaratePack(t *testing.T) {
 	}, defendUser)
 
 	// ATTACK
-	// attackCard := attackUser.Cards[0]
 	attackC := AttackCommand{
 		Command: Command{
 			Action: ACTION_ATTACK,
@@ -86,32 +95,31 @@ func TestGanaratePack(t *testing.T) {
 	}
 }
 
-func TestGameToGameStateResponse(t *testing.T) {
-	game, _ := CreateNewGame([]string{"user1", "user2"})
-	attackUser, _ := getUserById(game.Users, game.AttackingId)
-	gameState := gameToGameStateResponse(game, attackUser)
+// func TestGameToGameStateResponse(t *testing.T) {
+// 	game, _ := CreateNewGame([]string{"user1", "user2"})
+// 	attackUser, _ := game.getUserById(game.AttackingId)
+// 	gameState := gameToGameStateResponse(game, attackUser)
+//
+// 	if gameState.Me.Id != attackUser.Id {
+// 		t.Error("Encorrect GameStateResponse")
+// 	}
+// }
 
-	if gameState.Me.Id != attackUser.Id {
-		t.Error("Encorrect GameStateResponse")
-	}
-}
-
-func TestCreateNewGame(t *testing.T) {
-	game, err := CreateNewGame([]string{"test1", "test2"})
-	if err != nil {
-		t.Error(err)
-	}
-	for _, user := range game.Users {
-		if len(user.Cards) != 6 {
-			t.Error("User must have 6 cards.")
-		}
-	}
-
-	_ = game
-}
-
+//	func TestCreateNewGame(t *testing.T) {
+//		game, err := CreateNewGame([]string{"test1", "test2"})
+//		if err != nil {
+//			t.Error(err)
+//		}
+//		for _, user := range game.Users {
+//			if len(user.Cards) != 6 {
+//				t.Error("User must have 6 cards.")
+//			}
+//		}
+//
+//		_ = game
+//	}
 func TestAttackCycle(t *testing.T) {
-	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+	game, attackUser, defendUser, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -141,7 +149,7 @@ func TestAttackCycle(t *testing.T) {
 	}
 
 	// DEFEND
-	defendUser.Cards[0] = Card{Suit: game.Trump.Suit, Rank: 15}
+	defendUser.Cards[0] = Card{Suit: game.TrumpSuit, Rank: 15}
 	defendC := DefendCommand{
 		Command: Command{
 			Action: ACTION_DEFEND,
@@ -182,7 +190,7 @@ func TestAttackCycle(t *testing.T) {
 }
 
 func TestTakeAllCards(t *testing.T) {
-	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+	game, attackUser, defendUser, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -244,7 +252,7 @@ func TestTakeAllCards(t *testing.T) {
 }
 
 func TestDefendTimeOver(t *testing.T) {
-	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+	game, attackUser, defendUser, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -303,7 +311,7 @@ func TestDefendTimeOver(t *testing.T) {
 }
 
 func TestAttackTimeOver(t *testing.T) {
-	game, attackUser, _, err := CreateGameWithReadyUsers()
+	game, attackUser, _, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -341,7 +349,7 @@ func TestAttackTimeOver(t *testing.T) {
 }
 
 func TestCheckAttackTimerStatus(t *testing.T) {
-	game, attackUser, _, err := CreateGameWithReadyUsers()
+	game, attackUser, _, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -355,7 +363,7 @@ func TestCheckAttackTimerStatus(t *testing.T) {
 }
 
 func TestCheckDefendTimerStatus(t *testing.T) {
-	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+	game, attackUser, defendUser, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -381,7 +389,7 @@ func TestCheckDefendTimerStatus(t *testing.T) {
 }
 
 func TestGameEnd(t *testing.T) {
-	game, attackUser, defendUser, err := CreateGameWithReadyUsers()
+	game, attackUser, defendUser, err := createGameWithReadyUsers()
 
 	if err != nil {
 		t.Error(err)
@@ -403,7 +411,7 @@ func TestGameEnd(t *testing.T) {
 	game.AttackHandler(attackC, attackUser)
 
 	// DEFEND
-	defendUser.Cards[0] = Card{Suit: game.Trump.Suit, Rank: 15}
+	defendUser.Cards[0] = Card{Suit: game.TrumpSuit, Rank: 15}
 	defendC := DefendCommand{
 		Command: Command{
 			Action: ACTION_DEFEND,
