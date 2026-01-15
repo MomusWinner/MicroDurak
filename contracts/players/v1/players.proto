@@ -16,10 +16,10 @@ message Player {
 }
 
 message PlayerPlacement {
-  	string match_result_id = 1;
-	string player_id = 2;
-	int32 player_place = 3;
-	int32 rank_change = 4;
+  string match_result_id = 1;
+  string player_id = 2;
+  int32 player_place = 3;
+  int32 rank_change = 4;
 }
 
 message GetPlayerRequest {
