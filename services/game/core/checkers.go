@@ -1,12 +1,26 @@
 package core
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 func (g *Game) checkIsAttacker(userId string) string {
-	if userId != g.AttackingId {
+	if userId == g.DefendingId {
+		return ERROR_BAD_REQUEST
+	}
+
+	if contains(g.EndAttackUserId, g.AttackingId) {
+		if contains(g.EndAttackUserId, userId) {
+			return ERROR_NOT_YOUR_TURN
+		}
+		return ERROR_EMPTY
+	} else {
+		if userId == g.AttackingId {
+			return ERROR_EMPTY
+		}
 		return ERROR_NOT_YOUR_TURN
 	}
-	return ERROR_EMPTY
 }
 
 func (g *Game) checkIsDefender(userId string) string {
@@ -19,6 +33,7 @@ func (g *Game) checkIsDefender(userId string) string {
 func (g *Game) checkUserHasCard(user *User, card Card) string {
 	card, err := getCardBySuitAndRank(user.Cards, card.Suit, card.Rank)
 	if err != nil {
+		fmt.Println(card)
 		return ERROR_USER_NO_HAS_CARD
 	}
 	return ERROR_EMPTY

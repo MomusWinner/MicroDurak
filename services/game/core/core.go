@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"slices"
 )
 
 var (
@@ -248,7 +249,7 @@ func (g *Game) removeUserCard(userId string, suit int, rank int) error {
 		return err
 	}
 
-	for i := 0; i < len(user.Cards); i++ {
+	for i := range user.Cards {
 		if user.Cards[i].Suit == suit && user.Cards[i].Rank == rank {
 			user.Cards = append(user.Cards[i+1:], user.Cards[:i]...)
 			return nil
@@ -259,7 +260,7 @@ func (g *Game) removeUserCard(userId string, suit int, rank int) error {
 }
 
 func (g *Game) beatOffCard(suit int, rank int, targetCard Card) bool {
-	for i := 0; i < len(g.TableCards); i++ {
+	for i := range g.TableCards {
 		if g.TableCards[i].Suit == targetCard.Suit && g.TableCards[i].Rank == targetCard.Rank {
 			if CardGreater(suit, rank, targetCard.Suit, targetCard.Rank, g.TrumpSuit) {
 				g.TableCards[i].BeatOff = &Card{Suit: suit, Rank: rank}
@@ -280,7 +281,7 @@ func (g *Game) GeneratePack(response CommandResponse, user *User) map[string][]b
 
 	for userId, messagePack := range messagePackByUser {
 		if userId == user.Id {
-			r := []interface{}{response}
+			r := []any{response}
 			messagePack.Messages = append(r, messagePack.Messages...)
 		}
 		messageString, err := json.Marshal(messagePack)
@@ -298,10 +299,9 @@ func (g *Game) CreateMessangePackByUserFromEventBuffer() map[string]MessagePack 
 	for _, user := range g.Users {
 		events := g.GameEventBuffer
 
-		eventPackEvents := []interface{}{}
+		eventPackEvents := []any{}
 		for _, event := range events {
-			// fmt.Println(event)
-			// newEvent := event.SetGameEventState(gameToGameStateResponse(g, user))
+
 			estring, _ := json.Marshal(event)
 			fmt.Println("---------------------" + user.Id)
 			fmt.Println(string(estring))
@@ -357,17 +357,42 @@ func (g *Game) nextUser(userId string) (*User, error) {
 }
 
 func (g *Game) getUserById(userId string) (*User, error) {
-	for i := 0; i < len(g.Users); i++ {
-		if g.Users[i].Id == userId {
-			return g.Users[i], nil
+	for _, u := range g.Users {
+		if u.Id == userId {
+			return u, nil
 		}
 	}
 
 	return nil, errors.New("Not found")
 }
 
+func (g *Game) getUserByPlace(place int) (*User, error) {
+	for _, u := range g.Users {
+		if u.Place == place {
+			return u, nil
+		}
+	}
+
+	return nil, errors.New("Not found")
+}
+
+func (g *Game) getObservingUsers() []*User {
+	users := make([]*User, 0, len(g.Users)-2)
+	if len(g.Users) == 2 {
+		return users
+	}
+
+	for _, u := range g.Users {
+		if u.Id != g.AttackingId && u.Id != g.DefendingId {
+			users = append(users, u)
+		}
+	}
+
+	return users
+}
+
 func getCardBySuitAndRank(cards []Card, suit int, rank int) (Card, error) {
-	for i := 0; i < len(cards); i++ {
+	for i := range cards {
 		if cards[i].Suit == suit && cards[i].Rank == rank {
 			return cards[i], nil
 		}
@@ -377,7 +402,7 @@ func getCardBySuitAndRank(cards []Card, suit int, rank int) (Card, error) {
 }
 
 func tableHasCardRank(tableCards []TableCard, rank int) bool {
-	for i := 0; i < len(tableCards); i++ {
+	for i := range tableCards {
 		if tableCards[i].Rank == rank {
 			return true
 		}
@@ -394,7 +419,7 @@ func tableHasCardRank(tableCards []TableCard, rank int) bool {
 }
 
 func tableHasCard(tableCards []TableCard, suit int, rank int) bool {
-	for i := 0; i < len(tableCards); i++ {
+	for i := range tableCards {
 		if tableCards[i].Suit == suit && tableCards[i].Rank == rank {
 			return true
 		}
@@ -421,7 +446,7 @@ func CardGreater(fsuit int, frank int, ssuit int, srank int, trump int) bool {
 }
 
 func allCardBeatOff(cards []TableCard) bool {
-	for i := 0; i < len(cards); i++ {
+	for i := range cards {
 		if cards[i].BeatOff == nil {
 			return false
 		}
@@ -432,7 +457,7 @@ func allCardBeatOff(cards []TableCard) bool {
 func tableCardsToCards(tableCards []TableCard) []Card {
 	cards := []Card{}
 
-	for i := 0; i < len(tableCards); i++ {
+	for i := range tableCards {
 		cards = append(cards, Card{Suit: tableCards[i].Suit, Rank: tableCards[i].Rank})
 		if tableCards[i].BeatOff != nil {
 			cards = append(cards, *tableCards[i].BeatOff)
@@ -463,9 +488,7 @@ func (g *Game) AddEventToBuffer(event GameEventContainer) {
 	g.GameEventBuffer = append(g.GameEventBuffer, event)
 }
 
-func (g *Game) EndAttack(switch_users bool) {
-	newDefending, _ := g.nextUser(g.DefendingId)
-
+func (g *Game) EndAttack(switchUsers bool) {
 	attacker, _ := g.getUserById(g.AttackingId)
 	defender, _ := g.getUserById(g.DefendingId)
 
@@ -479,7 +502,9 @@ func (g *Game) EndAttack(switch_users bool) {
 	}
 	g.AddCardsToUser(defender)
 
-	if switch_users {
+	if switchUsers {
+		newDefending, _ := g.nextUser(g.DefendingId)
+
 		g.AttackingId = g.DefendingId
 		g.DefendingId = newDefending.Id
 	}
@@ -521,11 +546,21 @@ func (g *Game) TakeCardFromDeck() (Card, error) {
 	return card, nil
 }
 
+// func (g *Game) TakeCardFromUser(user *User, i int) (Card, error) {
+// 	if len(user.Cards) <= i {
+// 		return Card{}, errors.New(
+// 			fmt.Sprintf("Couldn't take card at index %d from User %s", i, user.Id),
+// 		)
+// 	}
+//
+// 	return slices.Delete(user.Cards, i, i+1)[0], nil
+// }
+
 func removeUser(users []*User, userIds ...string) {
 	for i, user := range users {
 		for _, removeUser := range userIds {
 			if user.Id == removeUser {
-				users = append(users[:i], users[i+1:]...)
+				users = slices.Delete(users, i, i+1)
 			}
 		}
 	}

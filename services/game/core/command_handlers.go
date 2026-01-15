@@ -1,7 +1,10 @@
 package core
 
-import "time"
+import (
+	"time"
+)
 
+// Attacker end attack
 func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 	gameErrors := []string{
 		g.checkNotFirstTurn(),
@@ -28,14 +31,14 @@ func (g *Game) EndAttackHandler(command Command, user *User) CommandResponse {
 
 	if len(g.EndAttackUserId) == len(g.Users)-1 {
 		g.EndAttack(true)
-	}
 
-	if len(g.Deck) == 0 && len(defendUser.Cards) == 0 && len(attackUser.Cards) == 0 {
-		g.AddEventToBuffer(NewEndGameEvent(GameResultDraw))
-	} else if len(g.Deck) == 0 && len(defendUser.Cards) == 0 {
-		g.AddEventToBuffer(NewEndGameEvent(GameResultWin))
-	} else if len(g.Deck) == 0 && len(attackUser.Cards) == 0 {
-		g.AddEventToBuffer(NewEndGameEvent(GameResultWin))
+		if len(g.Deck) == 0 && len(defendUser.Cards) == 0 && len(attackUser.Cards) == 0 {
+			g.AddEventToBuffer(NewEndGameEvent(GameResultDraw))
+		} else if len(g.Deck) == 0 && len(defendUser.Cards) == 0 {
+			g.AddEventToBuffer(NewEndGameEvent(GameResultWin))
+		} else if len(g.Deck) == 0 && len(attackUser.Cards) == 0 {
+			g.AddEventToBuffer(NewEndGameEvent(GameResultWin))
+		}
 	}
 
 	return CommandResponse{
@@ -180,6 +183,12 @@ func (g *Game) TakeAllCardHandler(command Command, user *User) CommandResponse {
 
 	g.EndAttack(false)
 
+	newAttacker, _ := g.nextUser(g.DefendingId)
+	newDefender, _ := g.nextUser(newAttacker.Id)
+
+	g.AttackingId = newAttacker.Id
+	g.DefendingId = newDefender.Id
+
 	return CommandResponse{
 		Error:   ERROR_EMPTY,
 		Command: command,
@@ -201,6 +210,7 @@ func (g *Game) ReadyHandler(command Command, user *User) CommandResponse {
 	if len(g.ReadyUsers) >= len(g.Users) {
 		g.IsStarted = true
 		g.StartAttackTimer()
+		g.AddEventToBuffer(NewReadyEvent(user.Id))
 		g.AddEventToBuffer(NewStartGameEvent(gameToGameStateResponse(g, user)))
 	} else {
 		g.AddEventToBuffer(NewReadyEvent(user.Id))

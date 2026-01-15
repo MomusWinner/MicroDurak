@@ -3,17 +3,19 @@ package core
 import "time"
 
 const (
-	EVENT_NONE                       = "EVENT_NONE"
-	EVENT_START                      = "EVENT_START"
-	EVENT_READY                      = "EVENT_READY"
-	EVENT_ATTACK                     = "EVENT_ATTACK"
-	EVENT_DEFEND                     = "EVENT_DEFEND"
-	EVENT_END_ATTACK                 = "EVENT_END_ATTACK"
-	EVENT_TAKE_ALL_CARDS             = "EVENT_TAKE_ALL_CARDS"
+	EVENT_NONE                       = "NONE"
+	EVENT_START                      = "START"
+	EVENT_READY                      = "READY"
+	EVENT_ATTACK                     = "ATTACK"
+	EVENT_DEFEND                     = "DEFEND"
+	EVENT_END_ATTACK                 = "END_ATTACK"
+	EVENT_TAKE_ALL_CARDS             = "TAKE_ALL_CARDS"
 	EVENT_ATTACK_TIMER_NOT_COMPLETED = "ATTACK_TIMER_NOT_COMPLETED"
 	EVENT_DEFEND_TIMER_NOT_COMPLETED = "DEFEND_TIMER_NOT_COMPLETED"
 	EVENT_ATTACK_TIMER_COMPLETED     = "ATTACK_TIMER_COMPLETED"
 	EVENT_DEFEND_TIMER_COMPLETED     = "DEFEND_TIMER_COMPLETED"
+	EVENT_USER_EXIT                  = "USER_EXIT" // connection loss
+	EVENT_USER_HAS_FINISHED          = "USER_HAS_FINISHED"
 	EVENT_END_GAME                   = "END_GAME"
 )
 
@@ -25,8 +27,7 @@ const (
 	GameResultInterrupted GameResult = "interrupted"
 )
 
-type GameEventContainer interface {
-}
+type GameEventContainer any
 
 // type GameEven
 
