@@ -5,9 +5,9 @@ import (
 
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
+	"github.com/MommusWinner/MicroDurak/internal/services/auth"
+	"github.com/MommusWinner/MicroDurak/internal/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/lib/validate"
-	"github.com/MommusWinner/MicroDurak/services/auth"
-	"github.com/MommusWinner/MicroDurak/services/auth/config"
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc"

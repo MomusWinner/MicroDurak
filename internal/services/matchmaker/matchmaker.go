@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/MommusWinner/MicroDurak/internal/game/v1"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
-	rc "github.com/MommusWinner/MicroDurak/services/matchmaker/redis"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/types"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
+	rc "github.com/MommusWinner/MicroDurak/internal/services/matchmaker/redis"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"
 	"github.com/redis/go-redis/v9"
 )
 

@@ -9,9 +9,9 @@ import (
 	"syscall"
 
 	pb "github.com/MommusWinner/MicroDurak/internal/game/v1"
-	"github.com/MommusWinner/MicroDurak/services/game/config"
-	"github.com/MommusWinner/MicroDurak/services/game/controller"
-	gameGrpc "github.com/MommusWinner/MicroDurak/services/game/grpc"
+	"github.com/MommusWinner/MicroDurak/internal/services/game/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/game/controller"
+	gameGrpc "github.com/MommusWinner/MicroDurak/internal/services/game/grpc"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"

@@ -4,10 +4,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/metrics"
+	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/publisher"
 	"github.com/MommusWinner/MicroDurak/lib/jwt"
-	"github.com/MommusWinner/MicroDurak/services/game-manager/config"
-	"github.com/MommusWinner/MicroDurak/services/game-manager/metrics"
-	"github.com/MommusWinner/MicroDurak/services/game-manager/publisher"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	amqp "github.com/rabbitmq/amqp091-go"

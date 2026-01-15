@@ -7,8 +7,8 @@ import (
 
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
-	"github.com/MommusWinner/MicroDurak/services/auth/config"
-	"github.com/MommusWinner/MicroDurak/services/auth/utils"
+	"github.com/MommusWinner/MicroDurak/internal/services/auth/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/auth/utils"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"

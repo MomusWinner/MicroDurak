@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/metrics"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/types"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/metrics"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc/codes"

@@ -4,14 +4,15 @@ ARG SERVICE_NAME
 
 WORKDIR /micro-durak/$SERVICE_NAME
 
-COPY ./cmd/$SERVICE_NAME ./cmd/$SERVICE_NAME
-COPY ./services/$SERVICE_NAME ./services/$SERVICE_NAME
 COPY ./vendor* ./vendor/
 COPY ./lib ./lib
-COPY ./internal ./internal
+COPY ./internal/services/$SERVICE_NAME ./internal/services/$SERVICE_NAME
+COPY ./internal/database/ ./internal/database/
+COPY ./internal/players/ ./internal/players/
+COPY ./internal/game/ ./internal/game/
 COPY ./go.mod ./go.sum ./
 
-RUN go build -o app ./cmd/$SERVICE_NAME/main.go
+RUN go build -o app ./internal/services/$SERVICE_NAME/cmd/main.go
 
 #final stage
 FROM alpine:3.21

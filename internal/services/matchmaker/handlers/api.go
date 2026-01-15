@@ -5,9 +5,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"
 	"github.com/MommusWinner/MicroDurak/lib/jwt"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/config"
-	"github.com/MommusWinner/MicroDurak/services/matchmaker/types"
 )
 
 func AddRoutes(

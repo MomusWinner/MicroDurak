@@ -50,6 +50,7 @@ services:
     ports:
       - 127.0.0.1:8080:8080
     environment:
+      JWT_PUBLIC: ${JWT_PUBLIC}
       JWT_PRIVATE: ${JWT_PRIVATE}
       DATABASE_URL: "user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} host=database sslmode=disable"
       PLAYERS_URL: "players:9090"

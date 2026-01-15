@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/MommusWinner/MicroDurak/services/game-manager/config"
-	"github.com/MommusWinner/MicroDurak/services/game-manager/handlers"
+	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/handlers"
 	"github.com/labstack/echo/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
 )

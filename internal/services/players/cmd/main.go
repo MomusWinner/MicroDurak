@@ -10,8 +10,8 @@ import (
 	"syscall"
 
 	pb "github.com/MommusWinner/MicroDurak/internal/players/v1"
-	"github.com/MommusWinner/MicroDurak/services/players"
-	"github.com/MommusWinner/MicroDurak/services/players/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/players"
+	"github.com/MommusWinner/MicroDurak/internal/services/players/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 )

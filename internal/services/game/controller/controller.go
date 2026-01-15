@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/MommusWinner/MicroDurak/services/game/config"
-	"github.com/MommusWinner/MicroDurak/services/game/core"
+	"github.com/MommusWinner/MicroDurak/internal/services/game/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/game/core"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 )

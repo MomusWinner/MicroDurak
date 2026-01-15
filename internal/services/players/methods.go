@@ -7,8 +7,8 @@ import (
 
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/internal/players/v1"
-	"github.com/MommusWinner/MicroDurak/services/players/config"
-	"github.com/MommusWinner/MicroDurak/services/players/rating"
+	"github.com/MommusWinner/MicroDurak/internal/services/players/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/players/rating"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
