@@ -8,8 +8,7 @@ COPY ./vendor* ./vendor/
 COPY ./lib ./lib
 COPY ./internal/services/$SERVICE_NAME ./internal/services/$SERVICE_NAME
 COPY ./internal/database/ ./internal/database/
-COPY ./internal/players/ ./internal/players/
-COPY ./internal/game/ ./internal/game/
+COPY ./internal/contracts/ ./internal/contracts/
 COPY ./go.mod ./go.sum ./
 
 RUN go build -o app ./internal/services/$SERVICE_NAME/cmd/main.go

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/database"
-	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/auth/utils"
 	"github.com/google/uuid"

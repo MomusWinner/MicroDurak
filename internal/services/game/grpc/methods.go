@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	"github.com/MommusWinner/MicroDurak/internal/game/v1"
+	"github.com/MommusWinner/MicroDurak/internal/contracts/game/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/game/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/game/controller"
 )

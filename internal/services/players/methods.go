@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/database"
-	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/rating"
 	"github.com/google/uuid"

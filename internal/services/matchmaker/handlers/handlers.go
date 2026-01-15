@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/MommusWinner/MicroDurak/internal/players/v1"
+	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/metrics"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"

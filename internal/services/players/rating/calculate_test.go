@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/database"
-	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )

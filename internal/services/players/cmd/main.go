@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	pb "github.com/MommusWinner/MicroDurak/internal/players/v1"
+	pb "github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/players"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/config"
 	"github.com/jackc/pgx/v5/pgxpool"

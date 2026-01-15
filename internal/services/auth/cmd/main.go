@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
+	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/database"
-	"github.com/MommusWinner/MicroDurak/internal/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/auth"
 	"github.com/MommusWinner/MicroDurak/internal/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/lib/validate"
