@@ -10,7 +10,6 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/services/auth/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/auth/utils"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 )
 
@@ -71,7 +70,7 @@ func (h *Handler) Register(c echo.Context) error {
 
 	playerId, err := uuid.Parse(rep.Id)
 	_, err = h.DBQueries.CreateAuth(ctx, database.CreateAuthParams{
-		PlayerID: pgtype.UUID{Valid: true, Bytes: playerId},
+		PlayerID: playerId,
 		Email:    r.Email,
 		Password: hashedPassword,
 	})

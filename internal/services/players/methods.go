@@ -10,7 +10,6 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/services/players/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/rating"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -46,7 +45,7 @@ func (ps *PlayerService) GetPlayer(ctx context.Context, req *players.GetPlayerRe
 		return nil, status.New(codes.InvalidArgument, "player_id is not uuid").Err()
 	}
 
-	player, err := ps.DBQueries.GetPlayerById(ctx, pgtype.UUID{Valid: true, Bytes: playerId})
+	player, err := ps.DBQueries.GetPlayerById(ctx, playerId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, status.New(codes.NotFound, err.Error()).Err()
 	} else if err != nil {
@@ -102,7 +101,7 @@ func (ps *PlayerService) CreateMatchResult(ctx context.Context, req *players.Cre
 		if err != nil {
 			return nil, status.New(codes.InvalidArgument, "player_id is not a uuid").Err()
 		}
-		playerDbId := pgtype.UUID{Bytes: playerId, Valid: true}
+		playerDbId := playerId
 
 		playerRating := playerScores[player.PlayerId].NewRating
 		playerRatingChange := int32(playerScores[player.PlayerId].RatingChange)

@@ -8,7 +8,6 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type mockDB struct {
@@ -24,7 +23,7 @@ func (m *mockDB) addPlayer(playerId uuid.UUID, rating int32) {
 	m.players[playerId.String()] = &database.Player{Rating: rating}
 }
 
-func (m *mockDB) GetPlayerById(ctx context.Context, id pgtype.UUID) (database.Player, error) {
+func (m *mockDB) GetPlayerById(ctx context.Context, id uuid.UUID) (database.Player, error) {
 	player := m.players[id.String()]
 	if player == nil {
 		return database.Player{}, sql.ErrNoRows

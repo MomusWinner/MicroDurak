@@ -8,7 +8,6 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const kCoeff float64 = 30
@@ -25,7 +24,7 @@ type PlayerStats struct {
 }
 
 type PlayerGetter interface {
-	GetPlayerById(ctx context.Context, id pgtype.UUID) (database.Player, error)
+	GetPlayerById(ctx context.Context, id uuid.UUID) (database.Player, error)
 }
 
 func CalculatePlayerScores(
@@ -42,7 +41,7 @@ func CalculatePlayerScores(
 	players := make(map[string]PlayerStats, playerCount)
 	for _, playerPlacement := range playerPlacements {
 		playerId, _ := uuid.Parse(playerPlacement.PlayerId)
-		player, err := dbQueries.GetPlayerById(ctx, pgtype.UUID{Valid: true, Bytes: playerId})
+		player, err := dbQueries.GetPlayerById(ctx, playerId)
 		if err != nil {
 			return nil, err
 		}
