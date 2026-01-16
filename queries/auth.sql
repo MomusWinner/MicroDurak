@@ -7,8 +7,3 @@ returning id;
 select * from player_auth
  where email = $1
  limit 1;
-
--- name: CheckEmail :one
-select count(*) from player_auth
- where email = $1
- limit 1;

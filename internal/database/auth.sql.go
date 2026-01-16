@@ -11,19 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const checkEmail = `-- name: CheckEmail :one
-select count(*) from player_auth
- where email = $1
- limit 1
-`
-
-func (q *Queries) CheckEmail(ctx context.Context, email string) (int64, error) {
-	row := q.db.QueryRow(ctx, checkEmail, email)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const createAuth = `-- name: CreateAuth :one
 insert into player_auth (player_id, email, password)
 values ($1, $2, $3)
