@@ -6,11 +6,11 @@ import (
 )
 
 func AddRoutes(e *echo.Echo, playerHandler *PlayerHandler) {
-	// Swagger documentation
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	// API routes
 	e.GET("/api/v1/players", playerHandler.GetAll)
 	e.GET("/api/v1/players/:id", playerHandler.GetById)
-	e.POST("/api/v1/match", playerHandler.CreateMatch)
+	e.POST("/api/v1/matches", playerHandler.CreateMatch)
+	e.GET("/api/v1/matches/:id", playerHandler.GetMatchResultById)
+	e.GET("/api/v1/matches", playerHandler.GetAllMatchResults)
 }

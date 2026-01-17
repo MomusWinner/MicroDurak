@@ -140,7 +140,7 @@ func (h *PlayerHandler) GetById(c echo.Context) error {
 // @Success 201 {object} CreateMatchResponse "Match result created successfully"
 // @Failure 400 "Bad request - validation error"
 // @Failure 500 "Internal server error"
-// @Router /match [post]
+// @Router /matches [post]
 func (h *PlayerHandler) CreateMatch(c echo.Context) error {
 	req := new(CreateMatchRequest)
 
@@ -153,7 +153,6 @@ func (h *PlayerHandler) CreateMatch(c echo.Context) error {
 		return err
 	}
 
-	// Convert GameResult int32 to models.GameResult
 	var gameResult models.GameResult
 	switch req.GameResult {
 	case "win":
@@ -166,22 +165,19 @@ func (h *PlayerHandler) CreateMatch(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid game_result value. Must be win, draw, or interrupted")
 	}
 
-	// Convert PlayerPlacementReq to models.PlayerPlacement
 	playerPlacements := make([]models.PlayerPlacement, len(req.PlayerPlacements))
 	for i, placement := range req.PlayerPlacements {
 		playerPlacements[i] = models.PlayerPlacement{
-			PlayerId:    placement.PlayerId,
-			PlayerPlace: placement.PlayerPlace,
+			Id:    placement.PlayerId,
+			Place: placement.PlayerPlace,
 		}
 	}
 
-	// Create match result request
 	matchReq := &props.CreateMatchResutlReq{
 		GameResult:       gameResult,
 		PlayerPlacements: playerPlacements,
 	}
 
-	// Call usecase
 	resp, err := h.matchUseCase.CreateMatchResult(context.Background(), matchReq)
 	if err != nil {
 		if errors.Is(err, cases.ErrNoPlayers) {
@@ -196,7 +192,6 @@ func (h *PlayerHandler) CreateMatch(c echo.Context) error {
 		return internalServerError
 	}
 
-	// Convert response to HTTP response format
 	playerResults := make([]PlayerMatchResultResponse, len(resp.PlayerMatchResults))
 	for i, result := range resp.PlayerMatchResults {
 		playerResults[i] = PlayerMatchResultResponse{
@@ -210,4 +205,49 @@ func (h *PlayerHandler) CreateMatch(c echo.Context) error {
 		MatchId:            resp.MatchId.String(),
 		PlayerMatchResults: playerResults,
 	})
+}
+
+// GetMatchResultById retrieves a match result by ID
+// @Summary Get match result by ID
+// @Description Returns match result information by its unique identifier
+// @Tags matches
+// @Accept json
+// @Produce json
+// @Param id path string true "Match UUID" format(uuid)
+// @Success 200 {object} models.MatchDetails "Match result information"
+// @Failure 400 "Invalid ID format"
+// @Failure 404 "Match not found"
+// @Failure 500 "Internal server error"
+// @Router /matches/{id} [get]
+func (h *PlayerHandler) GetMatchResultById(c echo.Context) error {
+	idParam := c.Param("id")
+	matchId, err := uuid.Parse(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid match ID format")
+	}
+
+	resp, err := h.matchUseCase.GetMatchResultById(context.Background(), &props.GetMatchResultByIdReq{Id: matchId})
+	if err != nil {
+		return internalServerError
+	}
+
+	return c.JSON(http.StatusOK, resp.Match)
+}
+
+// GetAllMatchResults retrieves all match results
+// @Summary Get all match results
+// @Description Returns a list of all match results in the system
+// @Tags matches
+// @Accept json
+// @Produce json
+// @Success 200 {object} props.GetAllMatchResultsResp "List of match results"
+// @Failure 500 "Internal server error"
+// @Router /matches [get]
+func (h *PlayerHandler) GetAllMatchResults(c echo.Context) error {
+	resp, err := h.matchUseCase.GetAllMatchResults(context.Background(), &props.GetAllMatchResultsReq{})
+	if err != nil {
+		return internalServerError
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }

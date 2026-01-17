@@ -58,3 +58,84 @@ func (q *Queries) CreateMatchResult(ctx context.Context, arg CreateMatchResultPa
 	err := row.Scan(&i.ID, &i.PlayerCount, &i.GameResult)
 	return i, err
 }
+
+const getAllMatchResults = `-- name: GetAllMatchResults :many
+SELECT mr.id, mr.player_count, mr.game_result
+FROM match_result mr
+ORDER BY mr.id
+`
+
+func (q *Queries) GetAllMatchResults(ctx context.Context) ([]MatchResult, error) {
+	rows, err := q.db.Query(ctx, getAllMatchResults)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MatchResult
+	for rows.Next() {
+		var i MatchResult
+		if err := rows.Scan(&i.ID, &i.PlayerCount, &i.GameResult); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getMatchResultById = `-- name: GetMatchResultById :one
+SELECT mr.id, mr.player_count, mr.game_result
+FROM match_result mr
+WHERE mr.id = $1
+`
+
+func (q *Queries) GetMatchResultById(ctx context.Context, id uuid.UUID) (MatchResult, error) {
+	row := q.db.QueryRow(ctx, getMatchResultById, id)
+	var i MatchResult
+	err := row.Scan(&i.ID, &i.PlayerCount, &i.GameResult)
+	return i, err
+}
+
+const getPlayerPlacementsByMatchId = `-- name: GetPlayerPlacementsByMatchId :many
+SELECT pp.player_id, pp.player_place, pp.rating_change, p.name, p.rating
+FROM player_placement pp
+JOIN player p ON pp.player_id = p.id
+WHERE pp.match_result_id = $1
+ORDER BY pp.player_place
+`
+
+type GetPlayerPlacementsByMatchIdRow struct {
+	PlayerID     uuid.UUID
+	PlayerPlace  int16
+	RatingChange int32
+	Name         string
+	Rating       int32
+}
+
+func (q *Queries) GetPlayerPlacementsByMatchId(ctx context.Context, matchResultID uuid.UUID) ([]GetPlayerPlacementsByMatchIdRow, error) {
+	rows, err := q.db.Query(ctx, getPlayerPlacementsByMatchId, matchResultID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPlayerPlacementsByMatchIdRow
+	for rows.Next() {
+		var i GetPlayerPlacementsByMatchIdRow
+		if err := rows.Scan(
+			&i.PlayerID,
+			&i.PlayerPlace,
+			&i.RatingChange,
+			&i.Name,
+			&i.Rating,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

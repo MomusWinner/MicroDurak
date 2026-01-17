@@ -38,3 +38,17 @@ type CreateMatchResutlResp struct {
 	MatchId            uuid.UUID
 	PlayerMatchResults []models.PlayerMatchResult
 }
+
+type GetMatchResultByIdReq struct {
+	Id uuid.UUID
+}
+
+type GetMatchResultByIdResp struct {
+	Match models.MatchDetails
+}
+
+type GetAllMatchResultsReq struct{}
+
+type GetAllMatchResultsResp struct {
+	Matches []models.MatchDetails
+}

@@ -15,7 +15,31 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/match": {
+        "/matches": {
+            "get": {
+                "description": "Returns a list of all match results in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get all match results",
+                "responses": {
+                    "200": {
+                        "description": "List of match results",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MommusWinner_MicroDurak_internal_services_players_domain_props.GetAllMatchResultsResp"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
             "post": {
                 "description": "Creates a match result with player placements and updates player ratings based on the game outcome",
                 "consumes": [
@@ -48,6 +72,48 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad request - validation error"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/matches/{id}": {
+            "get": {
+                "description": "Returns match result information by its unique identifier",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get match result by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Match UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Match result information",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MommusWinner_MicroDurak_internal_services_players_domain_models.MatchDetails"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID format"
+                    },
+                    "404": {
+                        "description": "Match not found"
                     },
                     "500": {
                         "description": "Internal server error"
@@ -207,6 +273,54 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/delivery_http.PlayerResponse"
+                    }
+                }
+            }
+        },
+        "github_com_MommusWinner_MicroDurak_internal_services_players_domain_models.MatchDetails": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_MommusWinner_MicroDurak_internal_services_players_domain_models.PlayerMatchResultDetails"
+                    }
+                },
+                "result": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_MommusWinner_MicroDurak_internal_services_players_domain_models.PlayerMatchResultDetails": {
+            "type": "object",
+            "properties": {
+                "current_rating": {
+                    "type": "integer"
+                },
+                "place": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "string"
+                },
+                "player_name": {
+                    "type": "string"
+                },
+                "rating_changed": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_MommusWinner_MicroDurak_internal_services_players_domain_props.GetAllMatchResultsResp": {
+            "type": "object",
+            "properties": {
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_MommusWinner_MicroDurak_internal_services_players_domain_models.MatchDetails"
                     }
                 }
             }

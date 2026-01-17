@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain"
@@ -47,7 +48,8 @@ func (ps *PlayerService) GetPlayer(ctx context.Context, req *players.GetPlayerRe
 	}
 
 	if resp.Player == nil {
-		return nil, status.New(codes.NotFound, err.Error()).Err()
+		err = status.New(codes.NotFound, fmt.Sprintf("Couldn't find player by id: %s", req.Id)).Err()
+		return nil, err
 	}
 
 	return &players.Player{
@@ -76,7 +78,7 @@ func (ps *PlayerService) CreateMatchResult(ctx context.Context, req *players.Cre
 
 	playerPlacements := make([]models.PlayerPlacement, len(req.PlayerPlacements))
 	for i, placement := range req.PlayerPlacements {
-		playerPlacements[i] = models.PlayerPlacement{PlayerId: placement.PlayerId, PlayerPlace: int(placement.PlayerPlace)}
+		playerPlacements[i] = models.PlayerPlacement{Id: placement.PlayerId, Place: int(placement.PlayerPlace)}
 	}
 
 	reqArgs := props.CreateMatchResutlReq{GameResult: gameResult, PlayerPlacements: playerPlacements}

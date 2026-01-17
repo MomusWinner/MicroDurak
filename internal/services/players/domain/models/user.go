@@ -11,6 +11,7 @@ type User struct {
 
 type PlayerScore struct {
 	Id           uuid.UUID
+	Place        int
 	NewRating    int
 	RatingChange int
 }

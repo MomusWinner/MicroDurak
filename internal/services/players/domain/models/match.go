@@ -29,13 +29,35 @@ type Match struct {
 	GameResult  GameResult
 }
 
+type PlayerMatchResultDetails struct {
+	PlayerId      uuid.UUID `json:"player_id"`
+	PlayerName    string    `json:"player_name"`
+	RatingChanged int32     `json:"rating_changed"`
+	Place         int       `json:"place"`
+	CurrentRating int32     `json:"current_rating"`
+}
+
+type MatchDetails struct {
+	Id      uuid.UUID                  `json:"id"`
+	Result  string                     `json:"result"`
+	Players []PlayerMatchResultDetails `json:"players"`
+}
+
 type PlayerPlacement struct {
-	PlayerId    string // TODO: rename
-	PlayerPlace int
+	Id    string
+	Place int
 }
 
 type PlayerMatchResult struct {
 	Id           uuid.UUID
 	Rating       int32
 	RatingChange int32
+}
+
+type PlayerPlacementWithDetails struct {
+	PlayerId      uuid.UUID
+	PlayerPlace   int
+	RatingChange  int32
+	PlayerName    string
+	CurrentRating int32
 }
