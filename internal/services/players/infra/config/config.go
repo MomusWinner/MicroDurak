@@ -2,7 +2,10 @@ package config
 
 import (
 	"github.com/alecthomas/kong"
+	"log"
 )
+
+import ()
 
 type Config struct {
 	JWTPublic   string `help:"Base64 Private key for the jwt" env:"JWT_PUBLIC" required:"true"`
@@ -12,18 +15,36 @@ type Config struct {
 	LogLevel    string `help:"Log level (debug, info, warn, error)" env:"LOG_LEVEL" default:"info"`
 }
 
-func Load() (*Config, error) {
+func Make() *Config {
 	cfg := &Config{}
 	parser, err := kong.New(cfg)
 	if err != nil {
-		return nil, err
+		log.Panic(err)
 	}
 
 	// Parse command-line flags, environment variables, and config file
 	_, err = parser.Parse(nil)
 	if err != nil {
-		return nil, err
+		log.Panic(err)
 	}
+	return cfg
+}
 
-	return cfg, nil
+func (s *Config) GetJwtPublic() string {
+	return s.JWTPublic
+}
+
+func (s *Config) GetHTTPPort() string {
+	return s.HTTPPort
+}
+
+func (s *Config) GetGRPCPort() string {
+	return s.GRPCPort
+}
+func (s *Config) GetDatabaseURL() string {
+	return s.DatabaseURL
+}
+
+func (s *Config) GetLogLevel() string {
+	return s.LogLevel
 }
