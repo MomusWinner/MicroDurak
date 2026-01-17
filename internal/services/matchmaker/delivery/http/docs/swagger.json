@@ -1,0 +1,44 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for handling match making functionality",
+        "title": "Matchmaker Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/api/v1",
+    "paths": {
+        "/matchmaker/find-match": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Initiates a WebSocket connection for players looking for a match",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matchmaker"
+                ],
+                "summary": "Find a match via WebSocket",
+                "responses": {
+                    "101": {
+                        "description": "WebSocket upgrade successful"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid JWT token or unknown player"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        }
+    }
+}

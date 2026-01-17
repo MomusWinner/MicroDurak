@@ -1,4 +1,4 @@
-package handlers
+package http
 
 import (
 	"encoding/json"
@@ -34,6 +34,17 @@ type Handler struct {
 	PlayersClient players.PlayersClient
 }
 
+// FindMatch handles WebSocket connections for players looking for matches
+// @Summary Find a match via WebSocket
+// @Description Initiates a WebSocket connection for players looking for a match
+// @Tags matchmaker
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 101 "WebSocket upgrade successful"
+// @Failure 401 "Unauthorized - Invalid JWT token or unknown player"
+// @Failure 500 "Internal server error"
+// @Router /matchmaker/find-match [get]
 func (h *Handler) FindMatch(c echo.Context) error {
 	start := time.Now()
 	var err error

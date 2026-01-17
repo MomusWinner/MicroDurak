@@ -1,0 +1,28 @@
+basePath: /api/v1
+host: localhost:3000
+info:
+  contact: {}
+  description: API for handling match making functionality
+  title: Matchmaker Service API
+  version: "1.0"
+paths:
+  /matchmaker/find-match:
+    get:
+      consumes:
+      - application/json
+      description: Initiates a WebSocket connection for players looking for a match
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: WebSocket upgrade successful
+        "401":
+          description: Unauthorized - Invalid JWT token or unknown player
+        "500":
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Find a match via WebSocket
+      tags:
+      - matchmaker
+swagger: "2.0"

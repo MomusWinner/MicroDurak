@@ -1,4 +1,4 @@
-package handlers
+package http
 
 import (
 	"github.com/labstack/echo/v4"
@@ -23,6 +23,6 @@ func AddRoutes(
 		Config:        config,
 		PlayersClient: playersClient,
 	}
-	e.GET("/matchmaker/find-match", h.FindMatch, jwt.AuthMiddleware(config.JWTPublic))
+	e.GET("/api/v1/matchmaker/find-match", h.FindMatch, jwt.AuthMiddleware(config.JWTPublic))
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 }

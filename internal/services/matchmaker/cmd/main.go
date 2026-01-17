@@ -11,12 +11,15 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
-	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/handlers"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/delivery/http"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	_ "github.com/MommusWinner/MicroDurak/internal/services/matchmaker/delivery/http/docs"
 )
 
 func run(ctx context.Context, e *echo.Echo) error {
@@ -54,7 +57,7 @@ func run(ctx context.Context, e *echo.Echo) error {
 	cancelChan := make(chan types.MatchCancel)
 	m := matchmaker.New(queueChan, cancelChan, config, redisClient, gameClient)
 
-	handlers.AddRoutes(e, queueChan, cancelChan, config, playerClient)
+	http.AddRoutes(e, queueChan, cancelChan, config, playerClient)
 
 	errChan := make(chan error, 2)
 
@@ -90,8 +93,16 @@ func run(ctx context.Context, e *echo.Echo) error {
 	}
 }
 
+// @title Matchmaker Service API
+// @version 1.0
+// @description API for handling match making functionality
+// @host localhost:3000
+// @basePath /api/v1
 func main() {
 	e := echo.New()
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	ctx := context.Background()
 	if err := run(ctx, e); err != nil {
 		e.Logger.Fatal(err)
