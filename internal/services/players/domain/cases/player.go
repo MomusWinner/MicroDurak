@@ -45,3 +45,17 @@ func (uc *PlayerUseCase) GetById(args props.GetPlayerByIdReq) (resp props.GetPla
 	}
 	return
 }
+
+func (uc *PlayerUseCase) GetAll(args props.GetAllPlayersReq) (resp props.GetAllPlayersResp, err error) {
+	players, err := uc.ctx.Connection().UserRepository().GetAll(context.Background())
+	if err != nil {
+		uc.ctx.Logger().Error(err.Error())
+		err = ErrInternal
+		return
+	}
+
+	resp = props.GetAllPlayersResp{
+		Players: players,
+	}
+	return
+}

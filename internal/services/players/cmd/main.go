@@ -8,57 +8,20 @@ import (
 	"time"
 
 	"github.com/MommusWinner/MicroDurak/internal/services/players/core"
+
+	_ "github.com/MommusWinner/MicroDurak/internal/services/players/delivery/http/docs" // для swagger документации
 )
 
-// func run(ctx context.Context, grpcServer *grpc.Server) error {
-// 	config, err := config.Load()
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	pool, err := pgxpool.New(ctx, config.DatabaseURL)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer pool.Close()
-//
-// 	pb.RegisterPlayersServer(grpcServer, players.NewPlayerService(pool, config))
-//
-// 	errChan := make(chan error, 2)
-//
-// 	go func() {
-// 		log.Printf("Starting gRPC server on :%s\n", config.GRPCPort)
-// 		lis, err := net.Listen("tcp", ":"+config.GRPCPort)
-// 		if err != nil {
-// 			errChan <- fmt.Errorf("gRPC listen error: %w", err)
-// 			return
-// 		}
-//
-// 		if err := grpcServer.Serve(lis); err != nil {
-// 			errChan <- fmt.Errorf("gRPC server error: %w", err)
-// 		}
-// 	}()
-//
-// 	quit := make(chan os.Signal, 1)
-// 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-//
-// 	select {
-// 	case err := <-errChan:
-// 		return err
-// 	case <-quit:
-// 		log.Println("\nShutting down servers...")
-//
-// 		grpcServer.GracefulStop()
-// 		fmt.Println("Servers stopped successfully")
-// 		return nil
-// 	}
-// }
-
+// @title Player Service API
+// @version 1.0
+// @description API for working with players
+// @host localhost:8090
+// @basePath /api/v1
 func main() {
 	var wg sync.WaitGroup
 
 	di := core.NewDi()
-	server := core.NewHttpServer(di.Ctx)
+	server := core.NewHttpServer(di.Ctx, di.PlayerHandler)
 	grpcServer := core.NewGrpcServer(di.Ctx, di.PlayerUseCase, di.MatchUseCase)
 
 	wg.Add(2)

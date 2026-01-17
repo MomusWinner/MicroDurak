@@ -22,6 +22,13 @@ type GetPlayerByIdResp struct {
 	Player *models.User
 }
 
+type GetAllPlayersReq struct {
+}
+
+type GetAllPlayersResp struct {
+	Players []models.User
+}
+
 type CreateMatchResutlReq struct {
 	GameResult       models.GameResult
 	PlayerPlacements []models.PlayerPlacement

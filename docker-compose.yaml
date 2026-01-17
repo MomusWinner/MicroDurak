@@ -69,8 +69,11 @@ services:
       args:
         PORT: 9090
         SERVICE_NAME: players
+    ports:
+      - 127.0.0.1:8090:8090
     environment:
       GRPC_PORT: "9090"
+      HTTP_PORT: "8090"
       JWT_PUBLIC: ${JWT_PUBLIC}
       DATABASE_URL: "user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} host=database sslmode=disable"
     depends_on:

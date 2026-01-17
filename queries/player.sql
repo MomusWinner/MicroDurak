@@ -11,3 +11,6 @@ update player
    set rating = $2
  where id = $1
 returning rating;
+
+-- name: GetAllPlayers :many
+select * from player;

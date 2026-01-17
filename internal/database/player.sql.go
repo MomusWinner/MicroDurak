@@ -29,6 +29,35 @@ func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (uui
 	return id, err
 }
 
+const getAllPlayers = `-- name: GetAllPlayers :many
+select id, name, age, rating from player
+`
+
+func (q *Queries) GetAllPlayers(ctx context.Context) ([]Player, error) {
+	rows, err := q.db.Query(ctx, getAllPlayers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Player
+	for rows.Next() {
+		var i Player
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Age,
+			&i.Rating,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPlayerById = `-- name: GetPlayerById :one
 select id, name, age, rating from player where id = $1
 `

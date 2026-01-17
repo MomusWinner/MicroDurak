@@ -25,7 +25,7 @@ func makeConnection(conn *pgx.Conn) *connection {
 	return &connection{
 		queries:         queries,
 		matchRepository: NewMatchRepository(conn, queries),
-		userRepository:  NewPlayerRepository(queries),
+		userRepository:  NewPlayerRepository(queries, conn),
 	}
 }
 

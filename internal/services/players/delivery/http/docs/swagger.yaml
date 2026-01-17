@@ -1,0 +1,89 @@
+basePath: /api/v1
+definitions:
+  delivery_http.PlayerResponse:
+    properties:
+      age:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      rating:
+        type: integer
+    type: object
+  delivery_http.PlayersResponse:
+    properties:
+      players:
+        items:
+          $ref: '#/definitions/delivery_http.PlayerResponse'
+        type: array
+    type: object
+host: localhost:8090
+info:
+  contact: {}
+  description: API for working with players
+  title: Player Service API
+  version: "1.0"
+paths:
+  /players:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of all players in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of players
+          schema:
+            $ref: '#/definitions/delivery_http.PlayersResponse'
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all players
+      tags:
+      - players
+  /players/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns player information by their unique identifier
+      parameters:
+      - description: Player UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Player information
+          schema:
+            $ref: '#/definitions/delivery_http.PlayerResponse'
+        "400":
+          description: Invalid ID format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Player not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get player by ID
+      tags:
+      - players
+swagger: "2.0"

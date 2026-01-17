@@ -8,14 +8,16 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/models"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type playerRepo struct {
 	queries *database.Queries
+	conn    *pgx.Conn
 }
 
-func NewPlayerRepository(queries *database.Queries) *playerRepo {
-	return &playerRepo{queries: queries}
+func NewPlayerRepository(queries *database.Queries, conn *pgx.Conn) *playerRepo {
+	return &playerRepo{queries: queries, conn: conn}
 }
 
 func (r *playerRepo) Add(ctx context.Context, player *models.User) (uuid.UUID, error) {
@@ -48,4 +50,32 @@ func (r *playerRepo) GetById(ctx context.Context, id uuid.UUID) (*models.User, e
 	}
 
 	return &player, nil
+}
+
+func (r *playerRepo) GetAll(ctx context.Context) ([]models.User, error) {
+	rows, err := r.conn.Query(ctx, "SELECT id, name, age, rating FROM player")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var players []models.User
+	for rows.Next() {
+		var p models.User
+		var age int16
+		var rating int32
+		err := rows.Scan(&p.Id, &p.Name, &age, &rating)
+		if err != nil {
+			return nil, err
+		}
+		p.Age = int(age)
+		p.Rating = int(rating)
+		players = append(players, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return players, nil
 }

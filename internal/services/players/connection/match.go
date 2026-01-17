@@ -49,7 +49,7 @@ func (r *matchRepo) WithTransaction(ctx context.Context, fn func(ctx context.Con
 	dbQueries := r.queries.WithTx(tx)
 
 	txMatchRepo := &matchRepo{queries: dbQueries}
-	txUserRepo := NewPlayerRepository(dbQueries)
+	txUserRepo := NewPlayerRepository(dbQueries, r.conn)
 	if err := fn(ctx, txMatchRepo, txUserRepo); err != nil {
 		return err
 	}
