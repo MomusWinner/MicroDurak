@@ -40,7 +40,7 @@ var internalServerError = echo.NewHTTPError(http.StatusInternalServerError, "Int
 // @Accept json
 // @Produce json
 // @Success 200 {object} PlayersResponse "List of players"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Failure 500 "Internal server error"
 // @Router /players [get]
 func (h *PlayerHandler) GetAll(c echo.Context) error {
 	resp, err := h.useCase.GetAll(props.GetAllPlayersReq{})
@@ -73,9 +73,9 @@ func (h *PlayerHandler) GetAll(c echo.Context) error {
 // @Produce json
 // @Param id path string true "Player UUID" format(uuid)
 // @Success 200 {object} PlayerResponse "Player information"
-// @Failure 400 {object} map[string]string "Invalid ID format"
-// @Failure 404 {object} map[string]string "Player not found"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Failure 400 "Invalid ID format"
+// @Failure 404 "Player not found"
+// @Failure 500 "Internal server error"
 // @Router /players/{id} [get]
 func (h *PlayerHandler) GetById(c echo.Context) error {
 	idParam := c.Param("id")

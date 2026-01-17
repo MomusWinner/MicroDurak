@@ -39,10 +39,6 @@ paths:
             $ref: '#/definitions/delivery_http.PlayersResponse'
         "500":
           description: Internal server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
       summary: Get all players
       tags:
       - players
@@ -67,22 +63,10 @@ paths:
             $ref: '#/definitions/delivery_http.PlayerResponse'
         "400":
           description: Invalid ID format
-          schema:
-            additionalProperties:
-              type: string
-            type: object
         "404":
           description: Player not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
         "500":
           description: Internal server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
       summary: Get player by ID
       tags:
       - players
