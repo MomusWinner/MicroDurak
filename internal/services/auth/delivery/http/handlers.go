@@ -1,4 +1,4 @@
-package v1
+package http
 
 import (
 	"errors"
@@ -24,16 +24,33 @@ type AuthResponse struct {
 	Token    string `json:"token"`
 }
 
+type RegisterRequest struct {
+	Name     string `json:"name" validate:"required"`
+	Age      int16  `json:"age" validate:"required,gte=0,lte=130"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
 var internalServerError = echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
 
+// Register creates a new user account
+// @Summary Register a new user
+// @Description Creates a new user account with the provided information
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration data"
+// @Success 201 {object} AuthResponse "User successfully registered"
+// @Failure 400
+// @Failure 409
+// @Failure 500
+// @Router /register [post]
 func (h *AuthHandler) Register(c echo.Context) error {
-	type RegisterRequest struct {
-		Name     string `json:"name" validate:"required"`
-		Age      int16  `json:"age" validate:"required,gte=0,lte=130"`
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
-	}
-
 	r := new(RegisterRequest)
 	if err := c.Bind(r); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
@@ -57,12 +74,19 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	})
 }
 
+// Login authenticates a user and returns a token
+// @Summary Login user
+// @Description Authenticates a user with email and password, returns JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200
+// @Failure 400
+// @Failure 403
+// @Failure 500
+// @Router /login [post]
 func (h *AuthHandler) Login(c echo.Context) error {
-	type LoginRequest struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
 	r := new(LoginRequest)
 	if err := c.Bind(r); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
