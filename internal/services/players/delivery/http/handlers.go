@@ -1,22 +1,29 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
+	"github.com/MommusWinner/MicroDurak/internal/services/players/domain"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/cases"
+	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/models"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/props"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type PlayerHandler struct {
-	useCase *cases.PlayerUseCase
+	ctx           domain.Context
+	playerUseCase *cases.PlayerUseCase
+	matchUseCase  *cases.MatchUseCase
 }
 
-func NewPlayerHandler(useCase *cases.PlayerUseCase) *PlayerHandler {
+func NewPlayerHandler(ctx domain.Context, playerUseCase *cases.PlayerUseCase, matchUseCase *cases.MatchUseCase) *PlayerHandler {
 	return &PlayerHandler{
-		useCase: useCase,
+		ctx:           ctx,
+		playerUseCase: playerUseCase,
+		matchUseCase:  matchUseCase,
 	}
 }
 
@@ -31,6 +38,27 @@ type PlayersResponse struct {
 	Players []PlayerResponse `json:"players"`
 }
 
+type CreateMatchRequest struct {
+	GameResult       string               `json:"game_result"`
+	PlayerPlacements []PlayerPlacementReq `json:"player_placements"`
+}
+
+type PlayerPlacementReq struct {
+	PlayerId    string `json:"player_id" validate:"required,uuid"`
+	PlayerPlace int    `json:"player_place" validate:"required,min=1"`
+}
+
+type PlayerMatchResultResponse struct {
+	Id           string `json:"id"`
+	Rating       int32  `json:"rating"`
+	RatingChange int32  `json:"rating_change"`
+}
+
+type CreateMatchResponse struct {
+	MatchId            string                      `json:"match_id"`
+	PlayerMatchResults []PlayerMatchResultResponse `json:"player_match_results"`
+}
+
 var internalServerError = echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
 
 // GetAll retrieves a list of all players
@@ -43,7 +71,7 @@ var internalServerError = echo.NewHTTPError(http.StatusInternalServerError, "Int
 // @Failure 500 "Internal server error"
 // @Router /players [get]
 func (h *PlayerHandler) GetAll(c echo.Context) error {
-	resp, err := h.useCase.GetAll(props.GetAllPlayersReq{})
+	resp, err := h.playerUseCase.GetAll(props.GetAllPlayersReq{})
 
 	if err != nil {
 		if errors.Is(err, cases.ErrNoPlayers) {
@@ -84,7 +112,7 @@ func (h *PlayerHandler) GetById(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid player ID format")
 	}
 
-	resp, err := h.useCase.GetById(props.GetPlayerByIdReq{Id: playerId})
+	resp, err := h.playerUseCase.GetById(props.GetPlayerByIdReq{Id: playerId})
 
 	if err != nil {
 		return internalServerError
@@ -99,5 +127,87 @@ func (h *PlayerHandler) GetById(c echo.Context) error {
 		Name:   resp.Player.Name,
 		Age:    resp.Player.Age,
 		Rating: resp.Player.Rating,
+	})
+}
+
+// CreateMatch creates a match result and updates player ratings
+// @Summary Create match result
+// @Description Creates a match result with player placements and updates player ratings based on the game outcome
+// @Tags matches
+// @Accept json
+// @Produce json
+// @Param request body CreateMatchRequest true "Match result data"
+// @Success 201 {object} CreateMatchResponse "Match result created successfully"
+// @Failure 400 "Bad request - validation error"
+// @Failure 500 "Internal server error"
+// @Router /match [post]
+func (h *PlayerHandler) CreateMatch(c echo.Context) error {
+	req := new(CreateMatchRequest)
+
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+	if err := c.Validate(req); err != nil {
+		h.ctx.Logger().Info("Hello")
+		h.ctx.Logger().Info(err.Error())
+		return err
+	}
+
+	// Convert GameResult int32 to models.GameResult
+	var gameResult models.GameResult
+	switch req.GameResult {
+	case "win":
+		gameResult = models.GameResult_WIN
+	case "draw":
+		gameResult = models.GameResult_DRAW
+	case "interrupted":
+		gameResult = models.GameResult_INTERRUPTED
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid game_result value. Must be win, draw, or interrupted")
+	}
+
+	// Convert PlayerPlacementReq to models.PlayerPlacement
+	playerPlacements := make([]models.PlayerPlacement, len(req.PlayerPlacements))
+	for i, placement := range req.PlayerPlacements {
+		playerPlacements[i] = models.PlayerPlacement{
+			PlayerId:    placement.PlayerId,
+			PlayerPlace: placement.PlayerPlace,
+		}
+	}
+
+	// Create match result request
+	matchReq := &props.CreateMatchResutlReq{
+		GameResult:       gameResult,
+		PlayerPlacements: playerPlacements,
+	}
+
+	// Call usecase
+	resp, err := h.matchUseCase.CreateMatchResult(context.Background(), matchReq)
+	if err != nil {
+		if errors.Is(err, cases.ErrNoPlayers) {
+			return echo.NewHTTPError(http.StatusBadRequest, "No players provided")
+		}
+		if errors.Is(err, cases.ErrUnprocessableId) {
+			return echo.NewHTTPError(http.StatusBadRequest, "Unprocessable player id")
+		}
+		if errors.Is(err, cases.ErrPlayerNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "Couldn't find the player")
+		}
+		return internalServerError
+	}
+
+	// Convert response to HTTP response format
+	playerResults := make([]PlayerMatchResultResponse, len(resp.PlayerMatchResults))
+	for i, result := range resp.PlayerMatchResults {
+		playerResults[i] = PlayerMatchResultResponse{
+			Id:           result.Id.String(),
+			Rating:       result.Rating,
+			RatingChange: result.RatingChange,
+		}
+	}
+
+	return c.JSON(http.StatusCreated, CreateMatchResponse{
+		MatchId:            resp.MatchId.String(),
+		PlayerMatchResults: playerResults,
 	})
 }

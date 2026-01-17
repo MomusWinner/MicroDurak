@@ -34,16 +34,16 @@ func (uc *MatchUseCase) CreateMatchResult(ctx context.Context, req *props.Create
 		id, err := uuid.Parse(placement.PlayerId)
 		if err != nil {
 			uc.ctx.Logger().Error("Unprocessable player id", placement.PlayerId)
-			return nil, ErrInternal
+			return nil, ErrUnprocessableId
 		}
 		user, err := uc.ctx.Connection().UserRepository().GetById(ctx, id)
 		if err != nil {
-			uc.ctx.Logger().Error("Unprocessable player id", placement.PlayerId)
+			uc.ctx.Logger().Error(err.Error())
 			return nil, ErrInternal
 		}
 		if user == nil {
 			uc.ctx.Logger().Error("Couldn't find player by id", placement.PlayerId)
-			return nil, ErrInternal
+			return nil, ErrPlayerNotFound
 		}
 		playerStats[i] = models.PlayerStats{
 			Id:     id,

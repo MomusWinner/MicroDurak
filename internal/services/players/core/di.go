@@ -18,13 +18,14 @@ func NewDi() *Di {
 
 	var (
 		playerUseCase = cases.NewPlayersUseCase(ctx)
-		playerHandler = http.NewPlayerHandler(playerUseCase)
+		matchUseCase  = cases.NewMatchUseCase(ctx)
+		playerHandler = http.NewPlayerHandler(ctx, playerUseCase, matchUseCase)
 	)
 
 	return &Di{
 		Ctx:           ctx,
 		PlayerUseCase: playerUseCase,
-		MatchUseCase:  cases.NewMatchUseCase(ctx),
+		MatchUseCase:  matchUseCase,
 		PlayerHandler: playerHandler,
 	}
 }

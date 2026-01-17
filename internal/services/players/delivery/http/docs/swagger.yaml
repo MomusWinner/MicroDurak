@@ -1,5 +1,43 @@
 basePath: /api/v1
 definitions:
+  delivery_http.CreateMatchRequest:
+    properties:
+      game_result:
+        type: string
+      player_placements:
+        items:
+          $ref: '#/definitions/delivery_http.PlayerPlacementReq'
+        type: array
+    type: object
+  delivery_http.CreateMatchResponse:
+    properties:
+      match_id:
+        type: string
+      player_match_results:
+        items:
+          $ref: '#/definitions/delivery_http.PlayerMatchResultResponse'
+        type: array
+    type: object
+  delivery_http.PlayerMatchResultResponse:
+    properties:
+      id:
+        type: string
+      rating:
+        type: integer
+      rating_change:
+        type: integer
+    type: object
+  delivery_http.PlayerPlacementReq:
+    properties:
+      player_id:
+        type: string
+      player_place:
+        minimum: 1
+        type: integer
+    required:
+    - player_id
+    - player_place
+    type: object
   delivery_http.PlayerResponse:
     properties:
       age:
@@ -25,6 +63,33 @@ info:
   title: Player Service API
   version: "1.0"
 paths:
+  /match:
+    post:
+      consumes:
+      - application/json
+      description: Creates a match result with player placements and updates player
+        ratings based on the game outcome
+      parameters:
+      - description: Match result data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery_http.CreateMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Match result created successfully
+          schema:
+            $ref: '#/definitions/delivery_http.CreateMatchResponse'
+        "400":
+          description: Bad request - validation error
+        "500":
+          description: Internal server error
+      summary: Create match result
+      tags:
+      - matches
   /players:
     get:
       consumes:

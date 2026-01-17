@@ -9,6 +9,46 @@
     "host": "localhost:8090",
     "basePath": "/api/v1",
     "paths": {
+        "/match": {
+            "post": {
+                "description": "Creates a match result with player placements and updates player ratings based on the game outcome",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Create match result",
+                "parameters": [
+                    {
+                        "description": "Match result data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/delivery_http.CreateMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Match result created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/delivery_http.CreateMatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - validation error"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
         "/players": {
             "get": {
                 "description": "Returns a list of all players in the system",
@@ -79,6 +119,64 @@
         }
     },
     "definitions": {
+        "delivery_http.CreateMatchRequest": {
+            "type": "object",
+            "properties": {
+                "game_result": {
+                    "type": "string"
+                },
+                "player_placements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/delivery_http.PlayerPlacementReq"
+                    }
+                }
+            }
+        },
+        "delivery_http.CreateMatchResponse": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "string"
+                },
+                "player_match_results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/delivery_http.PlayerMatchResultResponse"
+                    }
+                }
+            }
+        },
+        "delivery_http.PlayerMatchResultResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "rating_change": {
+                    "type": "integer"
+                }
+            }
+        },
+        "delivery_http.PlayerPlacementReq": {
+            "type": "object",
+            "required": [
+                "player_id",
+                "player_place"
+            ],
+            "properties": {
+                "player_id": {
+                    "type": "string"
+                },
+                "player_place": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
         "delivery_http.PlayerResponse": {
             "type": "object",
             "properties": {

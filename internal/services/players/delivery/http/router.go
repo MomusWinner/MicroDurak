@@ -12,4 +12,5 @@ func AddRoutes(e *echo.Echo, playerHandler *PlayerHandler) {
 	// API routes
 	e.GET("/api/v1/players", playerHandler.GetAll)
 	e.GET("/api/v1/players/:id", playerHandler.GetById)
+	e.POST("/api/v1/match", playerHandler.CreateMatch)
 }
