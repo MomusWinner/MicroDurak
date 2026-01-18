@@ -8,16 +8,16 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/models"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/repositories"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type matchRepo struct {
 	queries *database.Queries
-	conn    *pgx.Conn
+	pool    *pgxpool.Pool
 }
 
-func NewMatchRepository(conn *pgx.Conn, queries *database.Queries) *matchRepo {
-	return &matchRepo{queries: queries, conn: conn}
+func NewMatchRepository(pool *pgxpool.Pool, queries *database.Queries) *matchRepo {
+	return &matchRepo{queries: queries, pool: pool}
 }
 
 func (r *matchRepo) Add(ctx context.Context, playerCount int, gameResult models.GameResult) (*models.Match, error) {
@@ -95,7 +95,7 @@ func (r *matchRepo) GetPlayerPlacementsByMatchId(ctx context.Context, matchId uu
 }
 
 func (r *matchRepo) WithTransaction(ctx context.Context, fn func(ctx context.Context, matchRepo repositories.MatchRepository, userRepo repositories.UserRepository) error) error {
-	tx, err := r.conn.Begin(ctx)
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
@@ -104,7 +104,7 @@ func (r *matchRepo) WithTransaction(ctx context.Context, fn func(ctx context.Con
 	dbQueries := r.queries.WithTx(tx)
 
 	txMatchRepo := &matchRepo{queries: dbQueries}
-	txUserRepo := NewPlayerRepository(dbQueries, r.conn)
+	txUserRepo := NewPlayerRepository(dbQueries, r.pool)
 	if err := fn(ctx, txMatchRepo, txUserRepo); err != nil {
 		return err
 	}

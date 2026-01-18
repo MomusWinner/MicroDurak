@@ -35,6 +35,7 @@ func (uc *PlayerUseCase) Create(args props.CreatePlayerReq) (resp props.CreatePl
 func (uc *PlayerUseCase) GetById(args props.GetPlayerByIdReq) (resp props.GetPlayerByIdResp, err error) {
 	user, err := uc.ctx.Connection().UserRepository().GetById(context.Background(), args.Id)
 	if err != nil {
+
 		uc.ctx.Logger().Error(err.Error())
 		err = ErrInternal
 		return

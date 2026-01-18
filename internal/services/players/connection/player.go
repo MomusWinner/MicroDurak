@@ -8,16 +8,16 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/database"
 	"github.com/MommusWinner/MicroDurak/internal/services/players/domain/models"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type playerRepo struct {
 	queries *database.Queries
-	conn    *pgx.Conn
+	pool    *pgxpool.Pool
 }
 
-func NewPlayerRepository(queries *database.Queries, conn *pgx.Conn) *playerRepo {
-	return &playerRepo{queries: queries, conn: conn}
+func NewPlayerRepository(queries *database.Queries, pool *pgxpool.Pool) *playerRepo {
+	return &playerRepo{queries: queries, pool: pool}
 }
 
 func (r *playerRepo) Add(ctx context.Context, player *models.User) (uuid.UUID, error) {
@@ -42,40 +42,34 @@ func (r *playerRepo) GetById(ctx context.Context, id uuid.UUID) (*models.User, e
 		return nil, err
 	}
 
-	player := models.User{
-		Id:     user.ID,
-		Name:   user.Name,
-		Age:    int(user.Age),
-		Rating: int(user.Rating),
-	}
-
+	player := databasePlayerToDomain(user)
 	return &player, nil
 }
 
 func (r *playerRepo) GetAll(ctx context.Context) ([]models.User, error) {
-	rows, err := r.conn.Query(ctx, "SELECT id, name, age, rating FROM player")
+	players, err := r.queries.GetAllPlayers(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var players []models.User
-	for rows.Next() {
-		var p models.User
-		var age int16
-		var rating int32
-		err := rows.Scan(&p.Id, &p.Name, &age, &rating)
-		if err != nil {
-			return nil, err
-		}
-		p.Age = int(age)
-		p.Rating = int(rating)
-		players = append(players, p)
+	return databasePlayersToDomain(players), nil
+}
+
+func databasePlayerToDomain(player database.Player) models.User {
+	return models.User{
+		Id:     player.ID,
+		Name:   player.Name,
+		Age:    int(player.Age),
+		Rating: int(player.Rating),
+	}
+}
+
+func databasePlayersToDomain(players []database.Player) []models.User {
+	users := make([]models.User, len(players))
+
+	for i, player := range players {
+		users[i] = databasePlayerToDomain(player)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return players, nil
+	return users
 }
