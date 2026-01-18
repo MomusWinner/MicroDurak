@@ -183,11 +183,13 @@ func (g *Game) TakeAllCardHandler(command Command, user *User) CommandResponse {
 
 	g.EndAttack(false)
 
-	newAttacker, _ := g.nextUser(g.DefendingId)
-	newDefender, _ := g.nextUser(newAttacker.Id)
+	if len(g.Users) > 2 {
+		newAttacker, _ := g.nextUser(g.DefendingId)
+		newDefender, _ := g.nextUser(newAttacker.Id)
 
-	g.AttackingId = newAttacker.Id
-	g.DefendingId = newDefender.Id
+		g.AttackingId = newAttacker.Id
+		g.DefendingId = newDefender.Id
+	}
 
 	return CommandResponse{
 		Error:   ERROR_EMPTY,

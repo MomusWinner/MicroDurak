@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	"slices"
 )
 
 var (
@@ -492,9 +491,9 @@ func (g *Game) EndAttack(switchUsers bool) {
 	attacker, _ := g.getUserById(g.AttackingId)
 	defender, _ := g.getUserById(g.DefendingId)
 
-	otherUsers := []*User{}
+	otherUsers := make([]*User, len(g.Users))
 	copy(otherUsers, g.Users)
-	removeUser(otherUsers, attacker.Id, defender.Id)
+	otherUsers = removeUser(otherUsers, attacker.Id, defender.Id)
 
 	g.AddCardsToUser(attacker)
 	for _, user := range otherUsers {
@@ -546,12 +545,19 @@ func (g *Game) TakeCardFromDeck() (Card, error) {
 	return card, nil
 }
 
-func removeUser(users []*User, userIds ...string) {
-	for i, user := range users {
-		for _, removeUser := range userIds {
-			if user.Id == removeUser {
-				users = slices.Delete(users, i, i+1)
+func removeUser(users []*User, userIds ...string) []*User {
+	result := make([]*User, 0, len(users))
+	for _, user := range users {
+		shouldRemove := false
+		for _, removeUserId := range userIds {
+			if user.Id == removeUserId {
+				shouldRemove = true
+				break
 			}
 		}
+		if !shouldRemove {
+			result = append(result, user)
+		}
 	}
+	return result
 }
