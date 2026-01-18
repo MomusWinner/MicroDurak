@@ -16,28 +16,24 @@ func run(ctx context.Context, e *echo.Echo) error {
 	}
 	e.Logger.Info(config)
 
-	channel, err := connectToRabbit(config)
+	connection, err := connectToRabbit(config)
 
 	if err != nil {
 		return err
 	}
 
-	handlers.AddRoutes(e, channel, config)
+	handlers.AddRoutes(e, connection, config)
 
 	return e.Start(":" + config.Port)
 }
 
-func connectToRabbit(conf *config.Config) (*amqp.Channel, error) {
+func connectToRabbit(conf *config.Config) (*amqp.Connection, error) {
 	conn, err := amqp.Dial(conf.RabbitmqURL)
 	if err != nil {
 		return nil, err
 	}
-	channel, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
 
-	return channel, err
+	return conn, err
 }
 
 func main() {

@@ -7,6 +7,7 @@ import (
 	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/config"
 	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/metrics"
 	"github.com/MommusWinner/MicroDurak/internal/services/game-manager/publisher"
+	"github.com/MommusWinner/MicroDurak/lib/amqppool"
 	"github.com/MommusWinner/MicroDurak/lib/jwt"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -18,29 +19,34 @@ var (
 )
 
 type Handler struct {
-	Config  *config.Config
-	Channel *amqp.Channel
+	Config *config.Config
+	pool   *amqppool.ChannelPool
+	conn   *amqp.Connection
 }
 
-func AddRoutes(e *echo.Echo, channel *amqp.Channel, config *config.Config) {
-	h := Handler{Config: config, Channel: channel}
-	e.GET("/game-manager/:gameId", h.Connect, jwt.AuthMiddleware(config.JWTPublic))
+func AddRoutes(e *echo.Echo, conn *amqp.Connection, config *config.Config) {
+	h := Handler{Config: config, conn: conn, pool: amqppool.NewChannelPool(conn, 20)}
+	e.GET("/api/v1/game-manager/:gameId", h.Connect, jwt.AuthMiddleware(config.JWTPublic))
 }
 
 func (h Handler) Connect(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+
 	userId, ok := c.Get("playerId").(string)
 	if !ok {
-		panic("Add auth middleware")
+		ws.Close()
+		return echo.NewHTTPError(401, "Unauthorized")
 	}
 
 	gameId := c.Param("gameId")
 	if gameId == "" {
 		c.Response().Status = 400
+		ws.Close()
 		return nil
 	}
 
 	if err != nil {
+		ws.Close()
 		return err
 	}
 	defer ws.Close()
@@ -64,7 +70,13 @@ func (h Handler) Connect(c echo.Context) error {
 					return
 				}
 				log.Printf("ReadMessage: %v", string(msg))
-				publisher.SendMessageToGame(h.Channel, msg)
+				ch, err := h.pool.Get()
+				if err != nil {
+					c.Logger().Error(err)
+					return
+				}
+				publisher.SendMessageToGame(ch, msg)
+				h.pool.Return(ch)
 				log.Printf("%s\n", msg)
 			}
 		}
@@ -87,7 +99,14 @@ func (h Handler) processQueue(gameId string, userId string, processMessage func(
 	queue_name := "game-manager-" + userId + "_" + gameId
 	exchange_name := "game-manager-ex"
 
-	_, err := h.Channel.QueueDeclare(
+	channel, err := h.pool.Get()
+	defer h.pool.Return(channel)
+
+	if err != nil {
+		log.Printf("Declare err: %v", err)
+	}
+
+	_, err = channel.QueueDeclare(
 		queue_name, // name
 		false,      // durable
 		false,      // delete when unused
@@ -99,7 +118,7 @@ func (h Handler) processQueue(gameId string, userId string, processMessage func(
 		log.Printf("Declare err: %v", err)
 		panic(err)
 	}
-	err = h.Channel.ExchangeDeclare(
+	err = channel.ExchangeDeclare(
 		exchange_name, // name
 		"direct",      // type
 		true,          // durable
@@ -112,7 +131,7 @@ func (h Handler) processQueue(gameId string, userId string, processMessage func(
 		log.Printf("Exchange err: %v", err)
 		panic(err)
 	}
-	msgs, _ := h.Channel.Consume(
+	msgs, _ := channel.Consume(
 		queue_name, // queue
 		"",         // consumer
 		true,       // auto-ack
