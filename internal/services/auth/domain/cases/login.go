@@ -38,7 +38,7 @@ func (uc *AuthUseCase) Login(args props.LoginReq) (resp props.LoginResp, err err
 		return
 	}
 
-	jwt, err := utils.GenerateToken(uc.ctx.Config().GetJwtPrivate(), user.Id.String())
+	jwt, err := utils.GenerateToken(uc.ctx.Config().GetJwtPrivate(), user.PlayerId.String())
 	if err != nil {
 		uc.ctx.Logger().Error(err.Error())
 		err = ErrInternal
@@ -46,7 +46,7 @@ func (uc *AuthUseCase) Login(args props.LoginReq) (resp props.LoginResp, err err
 	}
 
 	resp = props.LoginResp{
-		PlayerId: user.Id.String(),
+		PlayerId: user.PlayerId.String(),
 		Token:    jwt,
 	}
 	return
