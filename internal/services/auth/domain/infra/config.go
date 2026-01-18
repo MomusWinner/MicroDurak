@@ -6,4 +6,9 @@ type Config interface {
 	GetPort() string
 	GetDatabaseURL() string
 	GetLogLevel() string
+	GetEmailFrom() string
+	GetSMTPHost() string
+	GetSMTPPass() string
+	GetSMTPPort() int
+	GetSMTPUser() string
 }

@@ -546,16 +546,6 @@ func (g *Game) TakeCardFromDeck() (Card, error) {
 	return card, nil
 }
 
-// func (g *Game) TakeCardFromUser(user *User, i int) (Card, error) {
-// 	if len(user.Cards) <= i {
-// 		return Card{}, errors.New(
-// 			fmt.Sprintf("Couldn't take card at index %d from User %s", i, user.Id),
-// 		)
-// 	}
-//
-// 	return slices.Delete(user.Cards, i, i+1)[0], nil
-// }
-
 func removeUser(users []*User, userIds ...string) {
 	for i, user := range users {
 		for _, removeUser := range userIds {

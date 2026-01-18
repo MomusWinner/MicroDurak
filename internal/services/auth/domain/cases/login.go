@@ -10,12 +10,14 @@ import (
 type AuthUseCase struct {
 	ctx           domain.Context
 	playersClient players.PlayersClient
+	smtp          domain.SMTP
 }
 
-func NewAuthUseCase(ctx domain.Context, playersClient players.PlayersClient) *AuthUseCase {
+func NewAuthUseCase(ctx domain.Context, playersClient players.PlayersClient, smtp domain.SMTP) *AuthUseCase {
 	return &AuthUseCase{
 		ctx:           ctx,
 		playersClient: playersClient,
+		smtp:          smtp,
 	}
 }
 

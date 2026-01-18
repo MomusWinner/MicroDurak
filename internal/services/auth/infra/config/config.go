@@ -13,6 +13,13 @@ type Config struct {
 	Port        string `help:"Port to listen on"                    env:"PORT" default:"8080"`
 	DatabaseURL string `help:"Database connection URL"              env:"DATABASE_URL" required:"true"`
 	LogLevel    string `help:"Log level (debug, info, warn, error)" env:"LOG_LEVEL" default:"info"`
+
+	//SMTP
+	EmailFrom string `env:"EMAIL_FROM" required:"true"`
+	SMTPHost  string `env:"SMTP_HOST"  required:"true"`
+	SMTPPass  string `env:"SMTP_PASS"  required:"true"`
+	SMTPPort  int    `env:"SMTP_PORT"  required:"true"`
+	SMTPUser  string `env:"SMTP_USER"  required:"true"`
 }
 
 // func Load() (*Config, error) {
@@ -63,4 +70,24 @@ func (s *Config) GetDatabaseURL() string {
 
 func (s *Config) GetLogLevel() string {
 	return s.LogLevel
+}
+
+func (s *Config) GetEmailFrom() string {
+	return s.EmailFrom
+}
+
+func (s *Config) GetSMTPHost() string {
+	return s.SMTPHost
+}
+
+func (s *Config) GetSMTPPass() string {
+	return s.SMTPPass
+}
+
+func (s *Config) GetSMTPPort() int {
+	return s.SMTPPort
+}
+
+func (s *Config) GetSMTPUser() string {
+	return s.SMTPUser
 }

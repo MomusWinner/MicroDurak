@@ -2,6 +2,7 @@ package cases
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 
 	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
@@ -32,6 +33,18 @@ func (uc *AuthUseCase) Register(args props.RegisterReq) (resp props.RegisterResp
 		uc.ctx.Logger().Error(err.Error())
 		err = ErrInternal
 		return
+	}
+
+	if uc.smtp == nil {
+		uc.ctx.Logger().Error("Smtp is nil")
+		err = ErrInternal
+		return
+	} else {
+		err = uc.smtp.Send(args.Email, args.Name)
+		uc.ctx.Logger().Info("Send email")
+		if err != nil {
+			uc.ctx.Logger().Error(err.Error())
+		}
 	}
 
 	hashedPassword, err := utils.HashPassword(args.Password)

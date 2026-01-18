@@ -33,7 +33,7 @@ const (
 )
 
 type MessagePack struct {
-	Messages  []interface{}     `json:"messages"`
+	Messages  []any             `json:"messages"`
 	GameState GameStateResponse `json:"game_state"`
 }
 

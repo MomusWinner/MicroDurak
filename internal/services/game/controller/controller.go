@@ -55,6 +55,9 @@ func (gc GameController) ProcessQueues() {
 		}
 
 		for userId, userMessage := range messageByUser {
+
+			log.Printf("Get message by %s", userId)
+			log.Printf("Message:  %s", userMessage)
 			gc.SendMessageToGameManager(game.Id, userId, userMessage)
 		}
 		core.SaveGame(game, gc.Redis)

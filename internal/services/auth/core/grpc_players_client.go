@@ -40,4 +40,3 @@ func MakePlayersClient(cfg infra.Config) players.PlayersClient {
 	})
 	return client
 }
-

@@ -54,6 +54,12 @@ services:
       JWT_PRIVATE: ${JWT_PRIVATE}
       DATABASE_URL: "user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} host=database sslmode=disable"
       PLAYERS_URL: "players:9090"
+
+      EMAIL_FROM: ${EMAIL_FROM}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_PORT: ${SMTP_PORT} 
     depends_on:
       database:
         condition: service_healthy
