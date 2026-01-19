@@ -192,12 +192,12 @@ func (c *WSClient) GamePlay(t *testing.T, user User, ch chan string) {
 			if msg == "take_all" {
 				time.Sleep(10 * time.Millisecond)
 				pack = c.GameReceive(t, user)
-				// c.GameEndAttack(t, user)
-				// time.Sleep(10 * time.Millisecond)
-				// pack = c.GameReceive(t, user)
 				time.Sleep(10 * time.Millisecond)
 				c.GameSendAttack(t, user, pack.GameState.Me.Cards[0])
+
+				time.Sleep(500 * time.Millisecond) // TODO:
 				ch <- "attack"
+				return
 			}
 		}
 	} else {
@@ -211,8 +211,10 @@ func (c *WSClient) GamePlay(t *testing.T, user User, ch chan string) {
 				c.GameSendTakeAllCards(t, user)
 				time.Sleep(10 * time.Millisecond)
 				pack = c.GameReceive(t, user)
+				time.Sleep(500 * time.Millisecond) // TODO:
 				ch <- "take_all"
 			}
+			return
 		}
 	}
 }

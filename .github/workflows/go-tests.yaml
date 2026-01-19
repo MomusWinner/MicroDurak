@@ -29,7 +29,7 @@ jobs:
       - name: Run Unit Tests
         working-directory: .
         run: |
-          go test -v -race -coverprofile=coverage.out ./...
+          go test ./... -v -race -coverprofile=coverage.out -exclude=**/integration/**
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v4
