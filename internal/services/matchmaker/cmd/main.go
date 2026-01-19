@@ -7,17 +7,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/MommusWinner/MicroDurak/internal/contracts/game/v1"
-	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
-	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker"
-	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/core"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/delivery/http"
-	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"
 	"github.com/labstack/echo/v4"
-	"github.com/redis/go-redis/v9"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	_ "github.com/MommusWinner/MicroDurak/internal/services/matchmaker/delivery/http/docs"
 )
@@ -26,43 +19,15 @@ func run(ctx context.Context, e *echo.Echo) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	config, err := config.Load()
-	if err != nil {
-		return err
-	}
+	di := core.NewDi()
+	defer core.DisposeCtx(di.Ctx.(*core.Ctx))
 
-	opt, err := redis.ParseURL(config.RedisURL)
-	if err != nil {
-		return err
-	}
-	redisClient := redis.NewClient(opt)
-
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	playerClientConn, err := grpc.NewClient(config.PlayersURL, opts...)
-	if err != nil {
-		return err
-	}
-	playerClient := players.NewPlayersClient(playerClientConn)
-
-	gameClientConn, err := grpc.NewClient(config.GameURL, opts...)
-	if err != nil {
-		return err
-	}
-	gameClient := game.NewGameClient(gameClientConn)
-
-	queueChan := make(chan types.MatchChan)
-	cancelChan := make(chan types.MatchCancel)
-	m := matchmaker.New(queueChan, cancelChan, config, redisClient, gameClient)
-
-	http.AddRoutes(e, queueChan, cancelChan, config, playerClient)
+	http.AddRoutes(e, di.Handler)
 
 	errChan := make(chan error, 2)
 
-	go func() { errChan <- m.Start(ctx) }()
-	go func() { errChan <- e.Start(":" + config.Port) }()
+	go func() { errChan <- di.MatchmakerUseCase.Start(ctx) }()
+	go func() { errChan <- e.Start(":" + di.Ctx.Config().GetPort()) }()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

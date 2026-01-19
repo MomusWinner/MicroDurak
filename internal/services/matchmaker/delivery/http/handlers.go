@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/MommusWinner/MicroDurak/internal/contracts/players/v1"
-	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/config"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/domain"
+	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/domain/types"
 	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/metrics"
-	"github.com/MommusWinner/MicroDurak/internal/services/matchmaker/types"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc/codes"
@@ -30,8 +30,22 @@ type FindMatchResponse struct {
 type Handler struct {
 	Queue         chan<- types.MatchChan
 	Cancel        chan<- types.MatchCancel
-	Config        *config.Config
+	Ctx           domain.Context
 	PlayersClient players.PlayersClient
+}
+
+func NewHandler(
+	queue chan<- types.MatchChan,
+	cancel chan<- types.MatchCancel,
+	ctx domain.Context,
+	playersClient players.PlayersClient,
+) *Handler {
+	return &Handler{
+		Queue:         queue,
+		Cancel:        cancel,
+		Ctx:           ctx,
+		PlayersClient: playersClient,
+	}
 }
 
 // FindMatch handles WebSocket connections for players looking for matches
@@ -60,14 +74,14 @@ func (h *Handler) FindMatch(c echo.Context) error {
 			statusCode = http.StatusInternalServerError
 		}
 
-		metrics.SearchDuration.WithLabelValues(h.Config.PodName, h.Config.Namespace).Observe(duration)
+		metrics.SearchDuration.WithLabelValues(h.Ctx.Config().GetPodName(), h.Ctx.Config().GetNamespace()).Observe(duration)
 
 		metrics.HTTPRequestsTotal.WithLabelValues(
 			c.Request().Method,
 			c.Path(),
 			strconv.Itoa(statusCode),
-			h.Config.PodName,
-			h.Config.Namespace,
+			h.Ctx.Config().GetPodName(),
+			h.Ctx.Config().GetNamespace(),
 		).Inc()
 	}()
 
@@ -90,7 +104,7 @@ func (h *Handler) FindMatch(c echo.Context) error {
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
-		metrics.WebsocketUpgradeErrors.WithLabelValues(h.Config.PodName, h.Config.Namespace).Inc()
+		metrics.WebsocketUpgradeErrors.WithLabelValues(h.Ctx.Config().GetPodName(), h.Ctx.Config().GetNamespace()).Inc()
 		return err
 	}
 	defer ws.Close()
@@ -120,8 +134,8 @@ func (h *Handler) FindMatch(c echo.Context) error {
 		}
 	}()
 
-	metrics.PlayersSearching.WithLabelValues(h.Config.PodName, h.Config.Namespace).Inc()
-	defer metrics.PlayersSearching.WithLabelValues(h.Config.PodName, h.Config.Namespace).Dec()
+	metrics.PlayersSearching.WithLabelValues(h.Ctx.Config().GetPodName(), h.Ctx.Config().GetNamespace()).Inc()
+	defer metrics.PlayersSearching.WithLabelValues(h.Ctx.Config().GetPodName(), h.Ctx.Config().GetNamespace()).Dec()
 
 	returnChan := make(chan types.MatchResponse)
 	h.Queue <- types.MatchChan{
