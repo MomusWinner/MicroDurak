@@ -227,37 +227,15 @@ func TestGanaratePack(t *testing.T) {
 
 	game.AttackHandler(attackC, attackUser)
 
-	packByUser := game.GeneratePack(response, defendUser)
-	for user, pack := range packByUser {
-		fmt.Println(user)
-		fmt.Println("----------------------------------------")
-		fmt.Println(string(pack))
-	}
+	_ = response
+	// packByUser := game.GeneratePack(response, defendUser)
+	// for user, pack := range packByUser {
+	// 	fmt.Println(user)
+	// 	fmt.Println("----------------------------------------")
+	// 	fmt.Println(string(pack))
+	// }
 }
 
-// func TestGameToGameStateResponse(t *testing.T) {
-// 	game, _ := CreateNewGame([]string{"user1", "user2"})
-// 	attackUser, _ := game.getUserById(game.AttackingId)
-// 	gameState := gameToGameStateResponse(game, attackUser)
-//
-// 	if gameState.Me.Id != attackUser.Id {
-// 		t.Error("Encorrect GameStateResponse")
-// 	}
-// }
-
-//	func TestCreateNewGame(t *testing.T) {
-//		game, err := CreateNewGame([]string{"test1", "test2"})
-//		if err != nil {
-//			t.Error(err)
-//		}
-//		for _, user := range game.Users {
-//			if len(user.Cards) != 6 {
-//				t.Error("User must have 6 cards.")
-//			}
-//		}
-//
-//		_ = game
-//	}
 func TestAttackCycle(t *testing.T) {
 	game, attacker, defender, err := createGameWithReadyUsers()
 
@@ -586,9 +564,6 @@ func TestGameEnd(t *testing.T) {
 
 func Test3UserGame(t *testing.T) {
 	game, a, d, o, err := createGameWithReadyUsers3()
-	_, _, _, _ = game, a, d, o
-
-	fmt.Printf("Attacker: %s\nDefender: %s\nObserver: %s\n ", a.Id, d.Id, o.Id)
 
 	if err != nil {
 		t.Error(err)
@@ -628,8 +603,6 @@ func Test3UserGame(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	fmt.Printf("\nNew Attacker: %s\nNew Defender: %s\n", game.AttackingId, game.DefendingId)
 
 	next_attacker, err := game.getUserByPlace(nextPlace(startAttackerPlace, len(game.Users)))
 	if err != nil {
